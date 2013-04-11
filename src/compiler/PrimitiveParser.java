@@ -119,7 +119,7 @@ public class PrimitiveParser {
 					throw new primitiveError("bad escaped character");
 				}
 			}
-			if (s.charAt(ipointer + 1) == '-') { // takes care of ranges
+			else if (s.charAt(ipointer + 1) == '-') { // takes care of ranges
 				int start = s.charAt(ipointer);
 				int end = s.charAt(ipointer + 2);
 				if (start > end) { // invalid ranges i.e. (1-0)

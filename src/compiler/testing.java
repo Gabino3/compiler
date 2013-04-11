@@ -2,6 +2,8 @@ package compiler;
 
 import java.util.ArrayList;
 import java.util.Collections;
+
+import compiler.ParseTree.Node;
 @SuppressWarnings("unused")
 public class testing {
 
@@ -27,7 +29,7 @@ public class testing {
 		int point = 0;
 		String sss = "123";
 		point += sss.length();
-		print(Character.toString(ss.charAt(point)));
+		//print(Character.toString(ss.charAt(point)));
 		
 		ArrayList<ArrayList<Integer>> bh = new ArrayList<ArrayList<Integer>>(20);
 		ArrayList<Integer> g = new ArrayList<Integer>();
@@ -50,7 +52,7 @@ public class testing {
 		
 		*/
 		ArrayList<ArrayList<Integer>> t = new ArrayList<ArrayList<Integer>>(10);
-		//System.out.println(t);
+		
 		Table table = new Table(6, notaccept);
 		
 		Digraph d = new Digraph(3);
@@ -74,6 +76,29 @@ public class testing {
 		
 		//System.out.println(table);
 		//System.out.println(table2);
+		
+		
+		
+		ParseTree<String> tree = new ParseTree<String>("ROOT");
+		print(Boolean.toString(tree.rootIsCurrent()));
+		tree.getCurrent().addChild(new Node<String>("NOTROOT", RDP.Terminal.CARROT, tree.getCurrent()));
+		tree.getCurrent().addChild(new Node<String>("NOTROOT", RDP.Terminal.CLS_CHAR, tree.getCurrent()));	
+		tree.setCurrent(tree.getCurrent().getChildren().get(0));
+		tree.getCurrent().addChild(new Node<String>("NOTROOT", RDP.Terminal.DASH, tree.getCurrent()));
+		tree.getCurrent().addChild(new Node<String>("NOTROOT", RDP.Terminal.DEFINED_CLASS, tree.getCurrent()));
+		print(tree.toString());
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 	}
 	
 	public static void print(String s){
