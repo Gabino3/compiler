@@ -3,11 +3,372 @@
  */
 package compiler;
 import java.util.ArrayList;
-import java.util.Collections;
+
+import compiler.Digraph.Edge;
+
+public class NFA {
+	private String id;
+	private Digraph nfa;
+	private ArrayList<Integer> currentState;
+	private int startState;
+	static final char EPSILON = (char)238;
+	private ArrayList<Character> alphabet;
+	
+	public ArrayList<Character> getAlphabet() {
+		return alphabet;
+	}
+
+
+	public void setAlphabet(ArrayList<Character> alphabet) {
+		this.alphabet = alphabet;
+	}
+
+
+	public NFA(String id, int startState, Digraph stateSpace, ArrayList<Character> alphabet) {
+		super();
+		this.id = id;
+		this.startState = startState;
+		this.currentState = new ArrayList<Integer>();
+		this.currentState.add(startState);
+		nfa = stateSpace;
+		this.alphabet = alphabet;
+		
+	}
+
+
+	public NFA(String id, int startState) {
+		super();
+		this.id = id;
+		this.startState = startState;
+		this.currentState = new ArrayList<Integer>();
+		this.currentState.add(startState);
+		this.nfa = new Digraph(1);
+		this.alphabet = new ArrayList<Character>();
+		this.alphabet.add(NFA.EPSILON);
+		
+	}
+	
+	public static NFA union(String id, NFA nfa1, NFA nfa2){
+		
+		Digraph newD = new Digraph(nfa1.nfa.getV() + nfa2.nfa.getV() + 1);
+		//----------------------------get edges
+		for (int v=0;v<nfa1.nfa.getV();v++){
+			for (Edge e : nfa1.nfa.getEdges(v))
+				newD.addEdge(v, e.to, e.action);
+		}
+		
+		for (int v=0;v<nfa2.nfa.getV();v++){
+			for (Edge e : nfa2.nfa.getEdges(v))
+				newD.addEdge(v+nfa1.nfa.getV(), e.to+nfa1.nfa.getV(), e.action);
+		}
+		//-----------------------------get accept states
+		for (int i : nfa1.nfa.getAcceptStates()){
+			newD.addAcceptStates(i);
+		}
+		
+		for (int i : nfa2.nfa.getAcceptStates()){
+			newD.addAcceptStates(i+nfa1.nfa.getV());
+		}
+		//-----------------------------new edges for old start states from new start state
+		newD.addEdge(newD.getV()-1, nfa1.startState, NFA.EPSILON);
+		newD.addEdge(newD.getV()-1, nfa2.startState + nfa1.nfa.getV(), NFA.EPSILON);
+		
+		//-----------------------------get alphabet
+		ArrayList<Character> newAlpha = new ArrayList<Character>();
+		for(char c : nfa1.alphabet){
+			newAlpha.add(c);
+		}
+		
+		for(char c : nfa2.alphabet){
+			if(!newAlpha.contains(c))
+				newAlpha.add(c);
+		}
+		
+		return new NFA(id, newD.getV()-1, newD, newAlpha);
+	}
+	
+	public static NFA concat(String id, NFA nfa1, NFA nfa2){
+		
+		Digraph newD = new Digraph(nfa1.nfa.getV() + nfa2.nfa.getV());
+		//----------------------------get edges
+		for (int v=0;v<nfa1.nfa.getV();v++){
+			for (Edge e : nfa1.nfa.getEdges(v))
+				newD.addEdge(v, e.to, e.action);
+		}
+		
+		for (int v=0;v<nfa2.nfa.getV();v++){
+			for (Edge e : nfa2.nfa.getEdges(v))
+				newD.addEdge(v+nfa1.nfa.getV(), e.to+nfa1.nfa.getV(), e.action);
+		}
+		//-----------------------------get accept states		
+		for (int i : nfa2.nfa.getAcceptStates()){
+			newD.addAcceptStates(i+nfa1.nfa.getV());
+		}
+		//-----------------------------new edges from nfa1 accept states to nfa2 start state
+		for (int i : nfa1.nfa.getAcceptStates()){
+			newD.addEdge(i, nfa2.startState+nfa1.nfa.getV(), NFA.EPSILON);
+		}
+		
+		//-----------------------------get alphabet
+				ArrayList<Character> newAlpha = new ArrayList<Character>();
+				for(char c : nfa1.alphabet){
+					newAlpha.add(c);
+				}
+				
+				for(char c : nfa2.alphabet){
+					if(!newAlpha.contains(c))
+						newAlpha.add(c);
+				}
+		
+		
+		return new NFA(id, nfa1.startState, newD, newAlpha);
+	}
+	
+	public static NFA star(String id, NFA nfa){
+		
+		Digraph newD = new Digraph(nfa.nfa.getV()+1);
+		//----------------------------get edges
+		for (int v=0;v<nfa.nfa.getV();v++){
+			for (Edge e : nfa.nfa.getEdges(v))
+				newD.addEdge(v, e.to, e.action);
+		}
+		
+		//-----------------------------get accept states and make edges from accept to old start		
+		for (int i : nfa.nfa.getAcceptStates()){
+			newD.addAcceptStates(i);
+			newD.addEdge(i, nfa.startState, NFA.EPSILON);
+		}
+		
+		//-----------------------------make new start state that is accept state the epsilons to old start state
+		newD.addAcceptStates(newD.getV()-1);
+		newD.addEdge(newD.getV()-1, nfa.startState, NFA.EPSILON);
+		
+		
+		return new NFA(id, newD.getV()-1, newD, nfa.alphabet);
+	}
+	
+	
+	
+	public static NFA plus(String id, NFA nfa){
+		
+		Digraph newD = new Digraph(nfa.nfa.getV());
+		//----------------------------get edges
+		for (int v=0;v<nfa.nfa.getV();v++){
+			for (Edge e : nfa.nfa.getEdges(v))
+				newD.addEdge(v, e.to, e.action);
+		}
+		
+		//-----------------------------get accept states and make edges from accept to start		
+		for (int i : nfa.nfa.getAcceptStates()){
+			newD.addAcceptStates(i);
+			newD.addEdge(i, nfa.startState, NFA.EPSILON);
+		}
+		
+
+		
+		return new NFA(id, nfa.startState, newD, nfa.alphabet);
+	}
+
+	public void addEdge(int from, int to, char action){
+		if(nfa.addEdge(from, to, action))
+			if(!this.alphabet.contains(action))
+				this.alphabet.add(action);
+		
+	}
+
+	public ArrayList<Integer> getCurrentState() {
+		return currentState;
+	}
+
+
+	public void setCurrentState(ArrayList<Integer> currentState) {
+		this.currentState = currentState;
+	}
+
+
+	public String getId() {
+		return id;
+	}
+
+
+	public Digraph getNfa() {
+		return nfa;
+	}
+
+
+	public int getStartState() {
+		return startState;
+	}
+	
+	@Override
+	public boolean equals(Object other){
+		if( other instanceof NFA)
+			return this.getId().equals(((NFA) other).getId());
+		else if(other instanceof String)
+			return this.getId().equals(other);
+		return false;
+	}
+	
+	public String toString(){
+		return id + "\nAlphabet: "+ alphabet.toString() + "\nStart: "+Integer.toString(startState)+ " \n "+ nfa.toString();
+		
+	}
+	
+}
+
+/*
+public class NFA {
+	private String id;
+	private NFAState startState;
+	private ArrayList<NFAState> currentState;
+	static final char EPSILON = (char)238;
+	private ArrayList<NFAState> stateSpace;
+	
+	
+	public NFA(String id, NFAState startState, ArrayList<NFAState> stateSpace) {
+		super();
+		this.id = id;
+		this.startState = startState;
+		ArrayList<NFAState> temp = new ArrayList<NFAState>();
+		temp.add(startState);
+		this.currentState = temp;
+		this.stateSpace = stateSpace;
+		
+	}
+	
+	@SuppressWarnings("unchecked")
+	public NFA(String id, NFAState startState) {
+		super();
+		this.id = id;
+		this.startState = startState;
+		ArrayList<NFAState> temp = new ArrayList<NFAState>();
+		temp.add(startState);
+		this.currentState = temp;
+		this.stateSpace = (ArrayList<NFAState>) temp.clone();
+		
+	}
+	
+	public static NFA union(String id, NFA nfa1, NFA nfa2) throws Exception{
+		
+		NFAState newStart = new NFAState(false);
+		
+			newStart.addNextStates(NFA.EPSILON, nfa1.getStartState().copy());
+			newStart.addNextStates(NFA.EPSILON, nfa2.getStartState().copy());
+		
+		ArrayList<NFAState> newStateSpace = new ArrayList<NFAState>();
+		for (int i=0;i<nfa1.stateSpace.size();i++){
+			newStateSpace.add(nfa1.stateSpace.get(i).copy());
+		}
+
+		for (int i=0;i<nfa2.stateSpace.size();i++){
+			newStateSpace.add(nfa2.stateSpace.get(i).copy());
+		}
+		newStateSpace.add(newStart);
+		return new NFA(id, newStart, newStateSpace);
+	}
+	
+	
+	public static NFA concat(String id, NFA nfa1, NFA nfa2) throws Exception{
+		
+		NFAState newStart = nfa1.getStartState().copy();
+		NFAState partTwo = nfa2.getStartState().copy();
+		ArrayList<NFAState> newStateSpace = new ArrayList<NFAState>();
+		for (int i=0;i<nfa1.stateSpace.size();i++){
+			newStateSpace.add(nfa1.stateSpace.get(i).copy());
+		}
+
+		for (int i=0;i<nfa2.stateSpace.size();i++){
+			newStateSpace.add(nfa2.stateSpace.get(i).copy());
+		}
+		newStateSpace.add(newStart);
+		
+		
+		
+		
+		
+		return new NFA(id, newStart);
+	}
+	
+	
+	public static NFA star(String id, NFA nfa1, NFA nfa2) throws Exception{
+		
+		NFAState newStart = new NFAState(false);
+		
+			newStart.addNextStates(NFA.EPSILON, nfa1.getStartState().copy());
+			newStart.addNextStates(NFA.EPSILON, nfa2.getStartState().copy());
+		
+		
+		
+		return new NFA(id, newStart);
+	}
+	
+	public static NFA plus(String id, NFA nfa1, NFA nfa2) throws Exception{
+		
+		NFAState newStart = new NFAState(false);
+		
+			newStart.addNextStates(NFA.EPSILON, nfa1.getStartState().copy());
+			newStart.addNextStates(NFA.EPSILON, nfa2.getStartState().copy());
+		
+		
+		
+		return new NFA(id, newStart);
+	}
+	
+	 
+	
+	
+	
+	
+	
+	public ArrayList<NFAState> getStateSpace() {
+		return stateSpace;
+	}
+
+	@Override
+	public boolean equals(Object other){
+		if( other instanceof NFA)
+			return this.id.equals(((NFA) other).getId());
+		return false;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public NFAState getStartState() {
+		return startState;
+	}
+
+	public void setStartState(NFAState startState) {
+		this.startState = startState;
+	}
+
+	public ArrayList<NFAState> getCurrentState() {
+		return currentState;
+	}
+
+	public void setCurrentState(ArrayList<NFAState> currentState) {
+		this.currentState = currentState;
+	}
+	
+	public String toString(){
+		return id;
+		
+	}
+
+}
+
+*/
+
+
 /**
  * @author Nino
  *
- */
+ *
 public class NFA {
 	private String id;
 	Table table; //state, input, nextStates
@@ -80,8 +441,33 @@ public class NFA {
 	}
 	
 	//TODO star()
-	public NFA star(){
-		return null;
+	public NFA star(String id){
+		
+		
+		int newStateSpace = this.getTable().getStates() + 1; //gets the number of states needed
+		
+			
+	
+		Table newTable = new Table(newStateSpace, this.getTable().getInputs());
+		
+		for(int i=0;i<this.getTable().getStates();i++){
+			for(int j=0;j<this.getTable().getInputs().size();j++){
+				if (!this.getTable().getnStates(i, this.getTable().getInputs().get(j)).isEmpty()){
+					newTable.addnStates(i, this.getTable().getInputs().get(j), this.getTable().getnStates(i, this.getTable().getInputs().get(j)));//add table this
+				}
+			}
+			
+		}
+		
+		ArrayList<Integer> newAcceptStates = new ArrayList<Integer>(); //adds the new state to accept states
+		newAcceptStates.addAll(this.getAcceptStates());
+		newAcceptStates.add(newTable.getStates()-1);
+		
+		newTable.addnStates(newTable.getStates()-1, (char)238, this.getStartState()); //new start state points to old start state
+		
+		
+		NFA unioned = new NFA(id, newTable, newTable.getStates()-1, newAcceptStates);
+		return unioned;
 		
 	}
 	//TODO plus()
@@ -150,3 +536,4 @@ public class NFA {
 	
 
 }
+*/

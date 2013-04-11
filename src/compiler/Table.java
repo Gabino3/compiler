@@ -47,7 +47,7 @@ public class Table {
 	}
 	
 	
-	public void setnStates(int state, char input,  ArrayList<Integer> nStates){ //replaces
+	public void setnStates(int state, char input,  ArrayList<Integer> nStates){ //replaces current states with new arraylist of states
 		if (state > states || state < 0 || inputs.indexOf(input) == -1){
 			
 		}else{
@@ -57,7 +57,7 @@ public class Table {
 		
 	}
 	
-	public void addnStates(int state, char input,  ArrayList<Integer> nStates){ //adds on a state
+	public void addnStates(int state, char input,  ArrayList<Integer> nStates){ //adds on an arraylist of states
 		if (state > states || state < 0 || inputs.indexOf(input) == -1){
 			
 		}else{

@@ -3,7 +3,6 @@
  */
 package compiler;
 
-import java.io.*;
 import java.util.ArrayList;
 
 
@@ -11,41 +10,12 @@ import java.util.ArrayList;
  * @author Nino
  * 
  */
-public class parser {
+public class PrimitiveParser {
 
 	public ArrayList<NFA> NFAs = new ArrayList<NFA>();
 
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) throws Exception {
-		// TODO Auto-generated method stub
-
-		FileReader fr = new FileReader("input\\SampleSpec");
-		BufferedReader br = new BufferedReader(fr);
-		String s;
-		parser parse = new parser();
-		while ((s = br.readLine()) != null && !s.equals("")) {
-
-			parse.NFAs.add(parse.charClass(s.trim()));
-			
-		}
-		System.out.println(parse.NFAs);
-		
-		while ((s = br.readLine()) != null) {
-
-			//System.out.println(s);
-		}
-
-		fr.close();
-
-		/*
-		 * 
-		 * parse.charClass(); parse.regex();
-		 */
-	}
-
-	private NFA charClass(String line) throws InterruptedException {
+	@SuppressWarnings({ "unchecked" })
+	public NFA charClass(String line) throws InterruptedException {
 		String id; // the id of the character class
 		ArrayList<Character> accept = new ArrayList<Character>(); // everything accepted
 		ArrayList<Character> notAccept = new ArrayList<Character>(); // everything not accepted (only used with ^)
@@ -59,8 +29,8 @@ public class parser {
 				ipointer += 5;
 				if (line.charAt(ipointer) == '$'){
 					String ccname = line.substring(ipointer);
-					if (NFAs.contains(new NFA(ccname, null, 0, null))){
-						accept = NFAs.get(NFAs.indexOf(new NFA(ccname, null, 0, null))).getTable().getInputs();
+					if (NFAs.contains(new NFA(ccname, 0))){
+						accept = (ArrayList<Character>) NFAs.get(NFAs.indexOf(new NFA(ccname, 0))).getAlphabet().clone();
 					}
 				}else if (line.charAt(ipointer) == '['){
 					accept = getBrackets(line.substring(ipointer, ipointer = line.indexOf(']', ipointer)));
@@ -80,17 +50,19 @@ public class parser {
 		
 
 		accept.removeAll(notAccept);
-		accept.remove((Character)(char)238);	
-		Table newTable = new Table(2, accept);
-		for (int i=0; i<accept.size();i++){
-			newTable.addnStates(0, accept.get(i), 1);
+		accept.remove((Character)(char)238);
+		NFA newnfa = new NFA(id, 0);
+		newnfa.getNfa().addVertex();
+		newnfa.getNfa().addAcceptStates(1);
+		for (char c : accept){
+			newnfa.addEdge(0, 1, c);
 		}
 		ArrayList<Integer> acceptState = new ArrayList<Integer>();
 		acceptState.add(1);
-	//	System.out.println(newTable);
+	//	System.out.println(newnfa);
 	//	System.out.println(accept);
 	//	Thread.sleep(100000);
-		return new NFA(id, newTable, 0, acceptState);
+		return newnfa;
 
 	}
 
@@ -154,87 +126,4 @@ public class parser {
 		return chars;
 	}
 
-	// //////////////recursive decent parser section /////////////////////
-
-	private boolean match(String token) {
-		// TODO Auto-generated method stub
-		return false;
-
-	}
-
-	private boolean RE_CHAR() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	@SuppressWarnings("unused")
-	private boolean regex() {
-		return rexp();
-
-	}
-
-	private boolean rexp() {
-		if (rexp1())
-			return rexp_();
-		return false;
-
-	}
-
-	private boolean rexp_() {
-		if (match("|")) {
-			if (rexp1())
-				return rexp_();
-			return false;
-		} else {
-			return true;
-		}
-	}
-
-	private boolean rexp1() {
-		if (rexp2()) {
-			return rexp1_();
-		}
-		return false;
-
-	}
-
-	private boolean rexp1_() {
-		if (rexp2())
-			return rexp1_();
-		return true;
-	}
-
-	private boolean rexp2() {
-		if (match("(")) {
-			if (rexp())
-				if (match(")"))
-					return rexp2Tail();
-			return false;
-		} else if (RE_CHAR()) {
-			return rexp2Tail();
-		}
-		return rexp3();
-	}
-
-	private boolean rexp2Tail() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean rexp3() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	/*
-	 * 
-	 * 
-	 * 
-	 * <rexp2-tail> * | + | e <rexp3> <char-class> | e <char-class> . | [
-	 * <char-class1> | <defined-class> <char-class1> <char-set-list> |
-	 * <exclude-set> <char-set-list> <char-set> <char-set-list> | ] <char-set>
-	 * CLS_CHAR <char-set-tail> <char-set-tail> – CLS_CHAR | e <exclude-set> ^
-	 * <char-set>] IN <exclude-set-tail> <exclude-set-tail> [<char-set>] |
-	 * <defined-class>
-	 */
 }
