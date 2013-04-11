@@ -1,5 +1,7 @@
 package compiler;
 
+import javax.swing.text.StyledEditorKit.ForegroundAction;
+
 @SuppressWarnings("unused")
 public class RDP {
 	// -----------------------------------other classes
@@ -14,16 +16,18 @@ public class RDP {
 
 	// ---------------------------------variables
 	ParseTree<String> tree;
-	StringBuffer line;
-
+	String line;
+	int linePointer;
+	public enum Terminal {CLS_CHAR, RE_CHAR, DEFINED_CLASS, UNION, STAR, PLUS, DASH, ANY, LPAREN, RPAREN, LBRACKET, RBRACKET, CARROT};
 	// ----------------------------------constructor
 
 	public RDP(String line) {
 		tree = new ParseTree<String>("");
-		this.line = new StringBuffer(line);
+		this.line = line;
+		linePointer = 0;
 	}
 
-	public static ParseTree<String> rdparser(String line) {
+	public static ParseTree<String> rdparser(String line) throws parseError {
 
 		RDP rdp = new RDP(line);
 
@@ -35,132 +39,236 @@ public class RDP {
 	// --------------------------------- helper methods
 
 	private void skipWhiteSpace() {
-		char ch = line.charAt(0);
+		char ch = line.charAt(linePointer);
 		while (ch != EOF && ch != '\n' && Character.isWhitespace(ch)) {
-			line.deleteCharAt(0);
-			ch = line.charAt(0);
+			linePointer++;
+			ch = line.charAt(linePointer);
 		}
 	}
 	
-	private String getNextToken(){
-		String token = "";
+	private boolean peek(Terminal t){
 		
+		//TODO
+		switch (t) {
 		
-		return token;
+		case CLS_CHAR:
+			
+			break;
+		case RE_CHAR:
+			
+			break;
+		case DEFINED_CLASS:
+			
+			break;
+		case UNION:
+			
+			break;
+		case STAR:
+			
+			break;
+		case PLUS:
+			
+			break;
+		case DASH:
+			
+			break;
+		case ANY:
+			
+			break;
+		case LPAREN:
+			
+			break;
+		case RPAREN:
+			
+			break;
+		case LBRACKET:
+			
+			break;
+		case RBRACKET:
+			
+			break;
+		case CARROT:
+			
+			break;
+		default:
+			
+		}
+		
+		return false;
 	}
 	
-	private boolean match(String token) {
+	private boolean match(Terminal t) {
 		// TODO Auto-generated method stub
+		switch (t) {
+		
+		case CLS_CHAR:
+			
+			break;
+		case RE_CHAR:
+			
+			break;
+		case DEFINED_CLASS:
+			
+			break;
+		case UNION:
+			
+			break;
+		case STAR:
+			
+			break;
+		case PLUS:
+			
+			break;
+		case DASH:
+			
+			break;
+		case ANY:
+			
+			break;
+		case LPAREN:
+			
+			break;
+		case RPAREN:
+			
+			break;
+		case LBRACKET:
+			
+			break;
+		case RBRACKET:
+			
+			break;
+		case CARROT:
+			
+			break;
+		default:
+			
+		}
+		
+		
 		return false;
 
 	}
 
 	// --------------------------recursive descent parser
 
-	private boolean regex() {
-		return rexp();
+	private void regex() throws parseError {
+		rexp();
+		
+	}
+
+
+	private void rexp() throws parseError {
+		rexp1();
+		rexp_();
+		
 
 	}
 
-	private boolean RE_CHAR() {
-		// TODO Auto-generated method stub
-		return false;
+	private void rexp_() throws parseError {
+		if (peek(Terminal.UNION)) {
+			match(Terminal.UNION);
+			rexp1();
+			rexp_();
+
+		}
+			
+		
 	}
 
-	private boolean CLS_CHAR() {
-		return false;
-		// TODO
+	private void rexp1() throws parseError {
+		rexp2();
+		rexp1_();
 
 	}
 
-	private boolean rexp() {
-		if (rexp1())
-			return rexp_();
-		return false;
-
+	private void rexp1_() throws parseError {
+		if(peek(Terminal.LPAREN) || peek(Terminal.RE_CHAR) || peek(Terminal.ANY) || peek(Terminal.LBRACKET) || peek(Terminal.DEFINED_CLASS)){
+			rexp2();
+			rexp1_();
+		}
+		
 	}
 
-	private boolean rexp_() {
-		if (match("|")) {
-			if (rexp1())
-				return rexp_();
-			return false;
+	private void rexp2() throws parseError {
+		if (peek(Terminal.LPAREN)) {
+			match(Terminal.LPAREN);
+			rexp();
+			if (!match(Terminal.RPAREN))
+				throw new parseError("Missing Right Paren");
+			rexp2Tail();
+
+		} else if (peek(Terminal.RE_CHAR)) {
+			rexp2Tail();
 		} else {
-			return true;
+			rexp3();
 		}
 	}
 
-	private boolean rexp1() {
-		if (rexp2()) {
-			return rexp1_();
+	private void rexp2Tail() {
+		if (peek(Terminal.STAR))
+			match(Terminal.STAR);
+		else if (peek(Terminal.PLUS))
+			match(Terminal.PLUS);
+		
+		
+	}
+	
+	
+
+	private void rexp3() {
+		if (peek(Terminal.ANY) || peek(Terminal.LBRACKET) || peek(Terminal.DEFINED_CLASS))
+			charClass();
+		
+	}
+
+	private void charClass() {
+		if (peek(Terminal.ANY)){
+			match(Terminal.ANY);
+		}else if (peek(Terminal.LBRACKET)){
+			match(Terminal.LBRACKET);
+			charClass1();
+		}else if (peek(Terminal.DEFINED_CLASS)){
+			match(Terminal.DEFINED_CLASS);
 		}
-		return false;
-
+		
 	}
-
-	private boolean rexp1_() {
-		if (rexp2())
-			return rexp1_();
-		return true;
-	}
-
-	private boolean rexp2() {
-		if (match("(")) {
-			if (rexp())
-				if (match(")"))
-					return rexp2Tail();
-			return false;
-		} else if (RE_CHAR()) {
-			return rexp2Tail();
-		}
-		return rexp3();
-	}
-
-	private boolean rexp2Tail() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean rexp3() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	private boolean charClass() {
-		return false;
+	
+	private void charClass1() {
+		
 		// TODO
 	}
 	
-	private boolean charClass1() {
-		return false;
+	private void charSetList() {
+		
 		// TODO
 	}
 
-	private boolean excludeSet() {
-		return false;
+	private void charSet() {
+		
+		// TODO
+	}
+	
+	private void charSetTail() {
+		
+		// TODO
+	}
+	
+	private void excludeSet() {
+		
+		// TODO
+	}
+	
+	private void excludeSetTail() {
+		
 		// TODO
 	}
 
-	private boolean charSet() {
-		return false;
+
+	private void definedClass() {
+		
 		// TODO
 	}
 
-	private boolean definedClass() {
-		return false;
-		// TODO
-	}
 
-	/*
-	 * 
-	 * 
-	 * 
-	 * <rexp2-tail> * | + | e <rexp3> <char-class> | e <char-class> . | [
-	 * <char-class1> | <defined-class> <char-class1> <char-set-list> |
-	 * <exclude-set> <char-set-list> <char-set> <char-set-list> | ] <char-set>
-	 * CLS_CHAR <char-set-tail> <char-set-tail> – CLS_CHAR | e <exclude-set> ^
-	 * <char-set>] IN <exclude-set-tail> <exclude-set-tail> [<char-set>] |
-	 * <defined-class>
-	 */
 
 }

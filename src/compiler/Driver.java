@@ -24,12 +24,14 @@ public class Driver {
 		//parse.NFAs.add(NFA.star("$numberOrNothing", parse.NFAs.get(0)));
 		//parse.NFAs.add(NFA.plus("$number", parse.NFAs.get(0)));
 		
-		//System.out.println(primitive.NFAs);
+	//	System.out.println(primitive.NFAs);
 		
 		
 		while ((s = br.readLine()) != null) {
-
-			System.out.println(s);
+		//	ParseTree<String> tree;
+		//	tree = RDP.rdparser(s);
+			
+		//	System.out.println(s);
 		}
 
 		fr.close();

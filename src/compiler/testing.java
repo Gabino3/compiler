@@ -21,7 +21,13 @@ public class testing {
 		for (int i = 40; i<=50;i++)
 			notaccept.add((char)i);
 		notaccept.add(NFA.EPSILON);
-		print(Boolean.toString(notaccept.contains('+')));
+	//	print(Boolean.toString(notaccept.contains('+')));
+		
+		String ss = "1234567890";
+		int point = 0;
+		String sss = "123";
+		point += sss.length();
+		print(Character.toString(ss.charAt(point)));
 		
 		ArrayList<ArrayList<Integer>> bh = new ArrayList<ArrayList<Integer>>(20);
 		ArrayList<Integer> g = new ArrayList<Integer>();
@@ -57,7 +63,7 @@ public class testing {
 		b.addEdge(2, 1, 'h');
 		
 		//print(d.toString());
-		System.out.println(d.toString());
+		//System.out.println(d.toString());
 		Table table2 = new Table(table.getStates(), table.getInputs());
 		table2.addState();
 		table2.addState();
