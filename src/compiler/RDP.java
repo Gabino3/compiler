@@ -18,7 +18,7 @@ public class RDP {
 	ParseTree<String> tree;
 	String line;
 	int linePointer;
-	public enum Terminal {CLS_CHAR, RE_CHAR, DEFINED_CLASS, UNION, STAR, PLUS, DASH, ANY, LPAREN, RPAREN, LBRACKET, RBRACKET, CARROT};
+	public enum Terminal {CLS_CHAR, RE_CHAR, DEFINED_CLASS, UNION, STAR, PLUS, DASH, ANY, LPAREN, RPAREN, LBRACKET, RBRACKET, CARROT, IN};
 	// ----------------------------------constructor
 
 	public RDP(String line) {
@@ -90,6 +90,9 @@ public class RDP {
 		case CARROT:
 			
 			break;
+		case IN:
+			
+			break;
 		default:
 			
 		}
@@ -138,6 +141,9 @@ public class RDP {
 			
 			break;
 		case CARROT:
+			
+			break;
+		case IN:
 			
 			break;
 		default:
@@ -209,19 +215,16 @@ public class RDP {
 			match(Terminal.STAR);
 		else if (peek(Terminal.PLUS))
 			match(Terminal.PLUS);
-		
-		
-	}
-	
-	
 
-	private void rexp3() {
+	}
+
+	private void rexp3() throws parseError {
 		if (peek(Terminal.ANY) || peek(Terminal.LBRACKET) || peek(Terminal.DEFINED_CLASS))
 			charClass();
 		
 	}
 
-	private void charClass() {
+	private void charClass() throws parseError {
 		if (peek(Terminal.ANY)){
 			match(Terminal.ANY);
 		}else if (peek(Terminal.LBRACKET)){
@@ -233,41 +236,74 @@ public class RDP {
 		
 	}
 	
-	private void charClass1() {
+	private void charClass1() throws parseError {
+		if (peek(Terminal.RBRACKET) || peek(Terminal.CLS_CHAR)){
+			charSetList();
+		} else if (peek(Terminal.CARROT)){
+			excludeSet();
+		}else{
+			throw new parseError("Missing Right Bracket OR character");
+		}
 		
-		// TODO
 	}
 	
-	private void charSetList() {
+	private void charSetList() throws parseError {
+		if (peek(Terminal.CLS_CHAR)){
+			charSet();
+			charSetList();
+		} else if (peek(Terminal.RBRACKET)){
+			match(Terminal.RBRACKET);
+		}else{
+			throw new parseError("Missing Right Bracket");
+		}
 		
-		// TODO
 	}
 
-	private void charSet() {
+	private void charSet() throws parseError {
+		if (peek(Terminal.CLS_CHAR)){
+			match(Terminal.CLS_CHAR);
+			charSetTail();
+		} else {
+			throw new parseError("Missing char");
+		}
 		
-		// TODO
 	}
 	
-	private void charSetTail() {
+	private void charSetTail() throws parseError {
+		if (peek(Terminal.DASH)){
+			match(Terminal.DASH);
+			if(!match(Terminal.CLS_CHAR))
+				throw new parseError("Missing char");
+		} 
 		
-		// TODO
 	}
 	
-	private void excludeSet() {
+	private void excludeSet() throws parseError {
+		if (peek(Terminal.CARROT)){
+			match(Terminal.CARROT);
+			charSet();
+			if (!match(Terminal.RBRACKET) || !match(Terminal.IN))
+				throw new parseError("Missing right bracket or IN statement");
+			excludeSetTail();
+		}
 		
-		// TODO
 	}
 	
-	private void excludeSetTail() {
+	private void excludeSetTail() throws parseError {
+		if (peek(Terminal.LBRACKET)){
+			match(Terminal.LBRACKET);
+			charSet();
+			if(!match(Terminal.RBRACKET))
+				throw new parseError("Missing right bracket or IN statement");
+			
+		}else if(peek(Terminal.DEFINED_CLASS)){
+			match(Terminal.DEFINED_CLASS);
+		}else{
+			throw new parseError("Missing right bracket or IN statement");
+		}
 		
-		// TODO
 	}
 
-
-	private void definedClass() {
-		
-		// TODO
-	}
 
 
 
