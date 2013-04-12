@@ -47,13 +47,23 @@ public class DFA {
 	  }//-----------------------------
 
 	
-	public void move(char action){
+	public ArrayList<Integer> move(char action){
 		for (Edge edge : getEdges().get(states.indexOf(currentState))){
 			if (edge.action == action){
 				currentState = edge.to;
-				break;
+				return edge.to;
 			}
 		}
+		return null;
+	}
+	
+	public boolean canMove(char action){
+		for (Edge edge : getEdges().get(states.indexOf(currentState))){
+			if (edge.action == action){
+				return !edge.to.equals(new ArrayList<Integer>());
+			}
+		}
+		return false;
 	}
 	
 	public boolean isAccept(){

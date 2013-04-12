@@ -62,6 +62,8 @@ public class Driver {
 			}
 			
 		}
+		fr.close();
+		fw.close();
 
 		/*
 		 * 

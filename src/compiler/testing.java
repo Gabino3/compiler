@@ -83,7 +83,13 @@ public class testing {
 		Collections.sort(g);
 		print(g.toString());
 		*/
-		print(NFA.toDFA(nfa).toString());
+		
+		String s = "asdf asdf  adsf";
+		String[] ss1 = s.split(" ");
+		for (String s2 : ss1){
+			print(s2);
+		}
+		//print(NFA.toDFA(nfa).toString());
 		
 	}
 	
