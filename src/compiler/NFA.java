@@ -2,11 +2,15 @@
  * 
  */
 package compiler;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 import compiler.Digraph.Edge;
-
-public class NFA {
+@SuppressWarnings("serial")
+public class NFA  implements java.io.Serializable{
 	private String id;
 	private Digraph nfa;
 	private ArrayList<Integer> currentState;
@@ -48,7 +52,12 @@ public class NFA {
 		
 	}
 	
-	public static NFA union(String id, NFA nfa1, NFA nfa2){
+	public static NFA union(String id, NFA nfa1, NFA nfa2) throws Exception{
+		
+		if(nfa1 == null)
+			return nfa2.copy();
+		if(nfa2 == null)
+			return nfa1.copy();
 		
 		Digraph newD = new Digraph(nfa1.nfa.getV() + nfa2.nfa.getV() + 1);
 		//----------------------------get edges
@@ -190,6 +199,9 @@ public class NFA {
 		return id;
 	}
 
+	public void setId(String id){
+		this.id = id;
+	}
 
 	public Digraph getNfa() {
 		return nfa;
@@ -214,6 +226,69 @@ public class NFA {
 		
 	}
 	
+	public NFA copy() throws Exception{
+	      ObjectOutputStream oos = null;
+	      ObjectInputStream ois = null;
+	      try
+	      {
+	         ByteArrayOutputStream bos = new ByteArrayOutputStream();
+	         oos = new ObjectOutputStream(bos); 
+	         // serialize and pass the object
+	         oos.writeObject(this);   
+	         oos.flush();               
+	         ByteArrayInputStream bin = new ByteArrayInputStream(bos.toByteArray()); 
+	         ois = new ObjectInputStream(bin);         
+	         // return the new object
+	         return (NFA) ois.readObject();
+	      }
+	      catch(Exception e)
+	      {
+	         System.out.println("Exception in ObjectCloner = " + e);
+	         throw(e);
+	      }
+	      finally
+	      {
+	         oos.close();
+	         ois.close();
+	      }
+	   }
+		
+	//takes NFA and returns corresponding DFA
+	public DFA toDFA(NFA nfa){
+		
+		ArrayList<Integer> dfaStartState = new ArrayList<Integer>();
+		dfaStartState = nfa.nfa.epsilonClosure(getStartState());
+		
+		DFA dfa = new DFA(nfa.id, dfaStartState, nfa.nfa, nfa.alphabet);
+		
+		while (dfa.hasUnmarked()){
+			//Mark state T
+			int stateIndex = dfa.getMarked().indexOf(0);
+			dfa.getMarked().set( stateIndex, 1);
+			
+			//for each a in alphabet 
+			for (Character a : dfa.getAlphabet() ){
+				ArrayList<Integer> newState =  new ArrayList<Integer>();
+				
+				//S = eClosure(move(T,a))
+				for (Integer vertex : dfa.getStates().get(stateIndex)){
+					dfa.addUnique(newState,(dfa.getDfa().epsilonClosure(vertex)));
+				}
+								
+				//if S is not in dfa.states add it and have it as unmarked
+				dfa.addUniqueState(newState);
+				
+				//create edge between T and S ie.move(T,a) to S
+				//dfa.addEdge(,a,);
+				
+				
+
+			}
+		}
+		
+		return dfa;
+		
+	}
 }
 
 /*

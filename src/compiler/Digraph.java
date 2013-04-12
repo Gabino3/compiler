@@ -9,9 +9,11 @@ import java.util.ArrayList;
 @SuppressWarnings("serial")
 public class Digraph implements java.io.Serializable{
 
+	static final char EPSILON = (char)238;
 	  static class Edge implements java.io.Serializable{
 	    public final int to;
 	    public final char action;
+	    
 	    
 	    public Edge(int to, char action) {
 	      this.to = to;
@@ -93,7 +95,24 @@ public class Digraph implements java.io.Serializable{
 				temp.add(e);
 		return temp;
 	}
-
+	
+	//gets all Vertices that an initalVertex can transition to with given action
+	public ArrayList<Integer> getVertices(int initialVertex, char action){
+		
+		 ArrayList<Integer> vertices = new ArrayList<Integer>();
+		for (Edge edge : getEdge(initialVertex,action) )
+			vertices.add(edge.to);
+		
+		return vertices;
+		
+	}
+	
+	//takes a set of states A and returns the epsilon-Closer of set A
+	public ArrayList<Integer> epsilonClosure(int initialVertex){
+	
+		return getVertices(initialVertex, EPSILON);
+		
+	}
 	public boolean addEdge(int from, int to, char action){
 		if(from < 0 || from >= V || to < 0 || to >= V){
 			System.out.println("Error: addEdge out of bounds");

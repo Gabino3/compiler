@@ -66,6 +66,10 @@ public class ParseTree<T> {
     		return this.children;
     	}
     	
+    	public boolean hasChildren(){
+    		return this.children.size() > 0;
+    	}
+    	
     	public int getNumOfChildren(){
     		return this.children.size();
     	}
@@ -76,7 +80,7 @@ public class ParseTree<T> {
         
     	public String toString(){
     		String s;
-    		if(type == null)
+    		if(type == RDP.Terminal.ROOT)
     			s = data + " [";
     		else
     			s= type.toString() + " [";

@@ -25,7 +25,7 @@ public class RDP {
 	int linePointer;
 
 	public enum Terminal {
-		CLS_CHAR, RE_CHAR, DEFINED_CLASS, UNION, STAR, PLUS, DASH, DOT, LPAREN, RPAREN, LBRACKET, RBRACKET, CARROT, IN, CONCAT
+		CLS_CHAR, RE_CHAR, DEFINED_CLASS, UNION, STAR, PLUS, DASH, DOT, LPAREN, RPAREN, LBRACKET, RBRACKET, CARROT, IN, CONCAT, ROOT
 	};
 
 	// ----------------------------------constructor
@@ -42,11 +42,12 @@ public class RDP {
 		RDP rdp = new RDP(line, definedClasses);
 		String id = rdp.line.substring(0, rdp.line.indexOf(' '));
 		rdp.tree.getRoot().setData(id);
+		rdp.tree.getRoot().setType(Terminal.ROOT);
 		//System.out.print(id);
 		rdp.linePointer = rdp.line.indexOf(' ');
 		rdp.regex();
-		System.out.println();
-		System.out.print(rdp.tree);
+		//System.out.println();
+		//System.out.print(rdp.tree);
 		return rdp.tree;
 	}
 
@@ -612,4 +613,276 @@ public class RDP {
 
 	}
 
+	
+	//------------------------------------------------- Interpret tree
+	
+	
+public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Exception{
+		
+		NFA temp= treeParserHelper(t.getRoot(), nfas);
+		temp.setId(t.getRoot().getData());
+		return temp;
+	}
+	
+	
+	private static NFA treeParserHelper(Node<String> n, ArrayList<NFA> nfas) throws Exception{
+		
+		NFA nfa0 = null;
+		NFA nfa1 = null;
+	
+		if(n.hasChildren()){ //----------------------------------has children
+			
+			if(n.getChildren().size() == 1){ // -----------------1 child
+				
+				if (n.getChildren().get(0).hasChildren()){ // if child has children
+				
+					nfa0 = treeParserHelper(n.getChildren().get(0), nfas);
+					
+					switch (n.getType()){
+					
+					case ROOT : case CARROT : case RPAREN:
+						return nfa0;
+					case PLUS :
+						return NFA.plus("temp", nfa0);
+					case STAR :
+						return NFA.star("temp", nfa0);
+					
+					}
+			
+				} else { // ------------------------------------if child has no children
+
+					switch (n.getType()){
+					
+					case ROOT : case CARROT : case RPAREN :
+						if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR)){
+							return quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1));
+						}else if (n.getChildren().get(0).isType(Terminal.DEFINED_CLASS)){
+							return nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))).copy();
+						}
+						break;
+					case PLUS :
+						if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR)){
+							return NFA.plus("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)));
+						}else if (n.getChildren().get(0).isType(Terminal.DEFINED_CLASS)){
+							return NFA.plus( "temp",(nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0)))));
+						}
+						break;
+					case STAR :
+						if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR)){
+							return NFA.star("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)));
+						}else if (n.getChildren().get(0).isType(Terminal.DEFINED_CLASS)){
+							return NFA.star( "temp",(nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0)))));
+						}
+						break;
+						
+					}
+					
+					
+				}
+				
+			}else{  //-------------------------------------------two children
+				
+				if (!n.getChildren().get(0).hasChildren() && !n.getChildren().get(1).hasChildren()){ // if children have no children
+					
+					
+					switch (n.getType()){
+					
+						case UNION :
+							if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR)){
+								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
+									return NFA.union("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+											quickNFA("temp", n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)) );
+								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
+									return NFA.union("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
+							}else if (n.getChildren().get(0).isType(Terminal.DEFINED_CLASS)){
+								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
+									return NFA.union("temp", nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+											quickNFA(n.getData(), n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)));
+								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
+									return NFA.union("temp", nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
+							}
+							break;
+						case DASH :
+							return quickNFA("temp", n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1), 
+									n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1));
+							
+						case CONCAT :
+							if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR)){
+								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
+									return NFA.concat("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+											quickNFA("temp", n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)) );
+								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
+									return NFA.concat("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
+							}else if (n.getChildren().get(0).isType(Terminal.DEFINED_CLASS)){
+								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
+									return NFA.concat("temp", nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+											quickNFA(n.getData(), n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)));
+								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
+									return NFA.concat("temp", nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
+							}
+							break;
+						case IN :
+							@SuppressWarnings("unchecked")
+							ArrayList<Character> temp = (ArrayList<Character>) (nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0)))).getAlphabet().clone();
+							temp.remove(n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1));
+							return quickNFA("temp", temp);
+							
+					}
+					
+					
+					
+				}else { //---------------------------------------a child has a child (still in 2 children area)
+					if(n.getChildren().get(0).hasChildren()){ //first has child
+						
+						nfa0 = treeParserHelper(n.getChildren().get(0), nfas);
+						
+						if(n.getChildren().get(1).hasChildren()){ //both have children
+							
+							nfa1 = treeParserHelper(n.getChildren().get(1), nfas);
+							switch (n.getType()){
+							
+								case UNION :
+									return NFA.union("temp", nfa0, nfa1);
+									
+								case CONCAT :
+									return NFA.concat("temp", nfa0, nfa1);
+								
+							}
+							
+						} else { //first is only one with child
+							switch (n.getType()){
+							
+							case UNION :
+								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
+									return NFA.union("temp", nfa0, 
+											quickNFA(n.getData(), n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)));
+								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
+									return NFA.union("temp", nfa0, 
+											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
+								
+							case CONCAT :
+								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
+									return NFA.concat("temp", nfa0, 
+											quickNFA(n.getData(), n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)));
+								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
+									return NFA.concat("temp", nfa0, 
+											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
+							
+							case IN :
+								@SuppressWarnings("unchecked")
+								ArrayList<Character> temp = (ArrayList<Character>) (nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0)))).getAlphabet().clone();
+								temp.removeAll(nfa0.getAlphabet());
+								//temp.add(NFA.EPSILON);
+								return quickNFA("temp", temp);
+							
+							}
+							
+						}
+						
+						
+					} else if(n.getChildren().get(1).hasChildren()){
+						
+						nfa1 = treeParserHelper(n.getChildren().get(1), nfas);
+						
+						switch (n.getType()){
+						
+						case UNION :
+							if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR))
+								return NFA.union("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+										nfa1 );
+							else if(n.getChildren().get(0).isType(Terminal.DEFINED_CLASS))
+								return NFA.union("temp",  nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+										nfa1);
+							
+						case CONCAT :
+							if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR))
+								return NFA.concat("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+										nfa1 );
+							else if(n.getChildren().get(0).isType(Terminal.DEFINED_CLASS))
+								return NFA.concat("temp",  nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+										nfa1);
+						
+						}
+						
+						
+					}
+					
+					
+				}
+				
+			}
+			
+		} else { //----------------------------------------------no children
+			
+			System.out.println("SHOULD NOT BE HERE");
+			
+		}
+		
+		return null;
+	}
+	
+	
+	private static NFA quickNFA(String id, char action){
+		
+		NFA temp;
+			temp = new NFA(id, 0);
+			temp.getNfa().addVertex();
+			temp.getNfa().addAcceptStates(1);
+			temp.addEdge(0, 1, action);
+			return temp;
+		
+	}
+	
+	private static NFA quickNFA(String id, char start, char end){
+		
+		NFA temp;
+			temp = new NFA(id, 0);
+			temp.getNfa().addVertex();
+			temp.getNfa().addAcceptStates(1);
+			for(int i=(int)start; i<=end;i++)
+				temp.addEdge(0, 1, (char)i);
+			return temp;
+		
+	}
+	
+	private static NFA quickNFA(String id, ArrayList<Character> actions){
+		
+		NFA temp;
+			temp = new NFA(id, 0);
+			temp.getNfa().addVertex();
+			temp.getNfa().addAcceptStates(1);
+			for(char action : actions)
+				temp.addEdge(0, 1, action);
+			return temp;
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }
