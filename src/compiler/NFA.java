@@ -73,11 +73,11 @@ public class NFA  implements java.io.Serializable{
 		}
 		//-----------------------------get accept states
 		for (int i : nfa1.nfa.getAcceptStates()){
-			newD.addAcceptStates(i);
+			newD.addAcceptStates(i, nfa1.nfa.getAcceptStateIds().get(nfa1.nfa.getAcceptStates().indexOf((Integer)i)));
 		}
 		
 		for (int i : nfa2.nfa.getAcceptStates()){
-			newD.addAcceptStates(i+nfa1.nfa.getV());
+			newD.addAcceptStates(i+nfa1.nfa.getV(), nfa2.nfa.getAcceptStateIds().get(nfa2.nfa.getAcceptStates().indexOf((Integer)i)));
 		}
 		//-----------------------------new edges for old start states from new start state
 		newD.addEdge(newD.getV()-1, nfa1.startState, NFA.EPSILON);
@@ -112,7 +112,7 @@ public class NFA  implements java.io.Serializable{
 		}
 		//-----------------------------get accept states		
 		for (int i : nfa2.nfa.getAcceptStates()){
-			newD.addAcceptStates(i+nfa1.nfa.getV());
+			newD.addAcceptStates(i+nfa1.nfa.getV(), id);
 		}
 		//-----------------------------new edges from nfa1 accept states to nfa2 start state
 		for (int i : nfa1.nfa.getAcceptStates()){
@@ -145,12 +145,12 @@ public class NFA  implements java.io.Serializable{
 		
 		//-----------------------------get accept states and make edges from accept to old start		
 		for (int i : nfa.nfa.getAcceptStates()){
-			newD.addAcceptStates(i);
+			newD.addAcceptStates(i, id);
 			newD.addEdge(i, nfa.startState, NFA.EPSILON);
 		}
 		
 		//-----------------------------make new start state that is accept state the epsilons to old start state
-		newD.addAcceptStates(newD.getV()-1);
+		newD.addAcceptStates(newD.getV()-1, id);
 		newD.addEdge(newD.getV()-1, nfa.startState, NFA.EPSILON);
 		
 		
@@ -169,7 +169,7 @@ public class NFA  implements java.io.Serializable{
 		
 		//-----------------------------get accept states and make edges from accept to start		
 		for (int i : nfa.nfa.getAcceptStates()){
-			newD.addAcceptStates(i);
+			newD.addAcceptStates(i, id);
 			newD.addEdge(i, nfa.startState, NFA.EPSILON);
 		}
 		
@@ -322,324 +322,3 @@ public class NFA  implements java.io.Serializable{
 	
 }
 
-/*
-public class NFA {
-	private String id;
-	private NFAState startState;
-	private ArrayList<NFAState> currentState;
-	static final char EPSILON = (char)238;
-	private ArrayList<NFAState> stateSpace;
-	
-	
-	public NFA(String id, NFAState startState, ArrayList<NFAState> stateSpace) {
-		super();
-		this.id = id;
-		this.startState = startState;
-		ArrayList<NFAState> temp = new ArrayList<NFAState>();
-		temp.add(startState);
-		this.currentState = temp;
-		this.stateSpace = stateSpace;
-		
-	}
-	
-	@SuppressWarnings("unchecked")
-	public NFA(String id, NFAState startState) {
-		super();
-		this.id = id;
-		this.startState = startState;
-		ArrayList<NFAState> temp = new ArrayList<NFAState>();
-		temp.add(startState);
-		this.currentState = temp;
-		this.stateSpace = (ArrayList<NFAState>) temp.clone();
-		
-	}
-	
-	public static NFA union(String id, NFA nfa1, NFA nfa2) throws Exception{
-		
-		NFAState newStart = new NFAState(false);
-		
-			newStart.addNextStates(NFA.EPSILON, nfa1.getStartState().copy());
-			newStart.addNextStates(NFA.EPSILON, nfa2.getStartState().copy());
-		
-		ArrayList<NFAState> newStateSpace = new ArrayList<NFAState>();
-		for (int i=0;i<nfa1.stateSpace.size();i++){
-			newStateSpace.add(nfa1.stateSpace.get(i).copy());
-		}
-
-		for (int i=0;i<nfa2.stateSpace.size();i++){
-			newStateSpace.add(nfa2.stateSpace.get(i).copy());
-		}
-		newStateSpace.add(newStart);
-		return new NFA(id, newStart, newStateSpace);
-	}
-	
-	
-	public static NFA concat(String id, NFA nfa1, NFA nfa2) throws Exception{
-		
-		NFAState newStart = nfa1.getStartState().copy();
-		NFAState partTwo = nfa2.getStartState().copy();
-		ArrayList<NFAState> newStateSpace = new ArrayList<NFAState>();
-		for (int i=0;i<nfa1.stateSpace.size();i++){
-			newStateSpace.add(nfa1.stateSpace.get(i).copy());
-		}
-
-		for (int i=0;i<nfa2.stateSpace.size();i++){
-			newStateSpace.add(nfa2.stateSpace.get(i).copy());
-		}
-		newStateSpace.add(newStart);
-		
-		
-		
-		
-		
-		return new NFA(id, newStart);
-	}
-	
-	
-	public static NFA star(String id, NFA nfa1, NFA nfa2) throws Exception{
-		
-		NFAState newStart = new NFAState(false);
-		
-			newStart.addNextStates(NFA.EPSILON, nfa1.getStartState().copy());
-			newStart.addNextStates(NFA.EPSILON, nfa2.getStartState().copy());
-		
-		
-		
-		return new NFA(id, newStart);
-	}
-	
-	public static NFA plus(String id, NFA nfa1, NFA nfa2) throws Exception{
-		
-		NFAState newStart = new NFAState(false);
-		
-			newStart.addNextStates(NFA.EPSILON, nfa1.getStartState().copy());
-			newStart.addNextStates(NFA.EPSILON, nfa2.getStartState().copy());
-		
-		
-		
-		return new NFA(id, newStart);
-	}
-	
-	 
-	
-	
-	
-	
-	
-	public ArrayList<NFAState> getStateSpace() {
-		return stateSpace;
-	}
-
-	@Override
-	public boolean equals(Object other){
-		if( other instanceof NFA)
-			return this.id.equals(((NFA) other).getId());
-		return false;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public NFAState getStartState() {
-		return startState;
-	}
-
-	public void setStartState(NFAState startState) {
-		this.startState = startState;
-	}
-
-	public ArrayList<NFAState> getCurrentState() {
-		return currentState;
-	}
-
-	public void setCurrentState(ArrayList<NFAState> currentState) {
-		this.currentState = currentState;
-	}
-	
-	public String toString(){
-		return id;
-		
-	}
-
-}
-
-*/
-
-
-/**
- * @author Nino
- *
- *
-public class NFA {
-	private String id;
-	Table table; //state, input, nextStates
-	int startState;
-	int currentState;
-	ArrayList<Integer> acceptStates;
-	
-	
-	
-	public NFA(String id, Table table, int startState, ArrayList<Integer> acceptStates) {
-		super();
-		this.id = id;
-		this.table = table;
-		this.startState = startState;
-		this.currentState = startState;
-		this.acceptStates = acceptStates;
-			
-	}
-	
-	public NFA union(String id, NFA nfa){
-		return union(id, nfa.getTable(), nfa.getStartState(), nfa.getAcceptStates());
-	}
-	
-	public NFA union(String id, Table table, int startState, ArrayList<Integer> acceptStates){
-		
-		ArrayList<Integer> newAcceptStates = new ArrayList<Integer>(); //gets new accept states (this then other)
-		newAcceptStates.addAll(this.getAcceptStates());
-		for (int i=0;i<acceptStates.size();i++){
-			newAcceptStates.add(acceptStates.get(i)+this.getTable().getStates());
-		}
-		
-		int newStateSpace = this.getTable().getStates() + table.getStates() + 1; //gets the number of states needed
-		
-		ArrayList<Character> inputs = new ArrayList<Character>();
-		inputs.addAll(this.table.getInputs());//gets the alphabet from both tables and removes duplicates
-		inputs.addAll(table.getInputs());
-		Collections.sort(inputs);
-		for (int i=0;i+1<inputs.size();i++)
-			if((int)inputs.get(i) == (int)inputs.get(i+1))
-				inputs.remove(i--);
-			
-	
-		Table newTable = new Table(newStateSpace, inputs);
-		
-		for(int i=0;i<this.getTable().getStates();i++){
-			for(int j=0;j<this.getTable().getInputs().size();j++){
-				if (!this.getTable().getnStates(i, this.getTable().getInputs().get(j)).isEmpty()){
-					newTable.addnStates(i, this.getTable().getInputs().get(j), this.getTable().getnStates(i, this.getTable().getInputs().get(j)));//add table this
-				}
-			}
-			
-		}
-		
-		for(int i=0;i<table.getStates();i++){
-			for(int j=0;j<table.getInputs().size();j++){
-				if (!table.getnStates(i, table.getInputs().get(j)).isEmpty()){
-					newTable.addnStates(i+this.getTable().getStates(), table.getInputs().get(j), addToAllInList(this.getTable().getStates(), table.getnStates(i, table.getInputs().get(j))) );//add table other
-				}
-			}
-			
-		}
-		ArrayList<Integer> newStartState = new ArrayList<Integer>();
-		newStartState.add(startState+this.getTable().getStates());
-		newStartState.add(this.getStartState());
-		newTable.addnStates(newTable.getStates()-1, (char)238, newStartState); //new start state
-		
-		
-		NFA unioned = new NFA(id, newTable, newTable.getStates()-1, newAcceptStates);
-		return unioned;
-	}
-	
-	//TODO star()
-	public NFA star(String id){
-		
-		
-		int newStateSpace = this.getTable().getStates() + 1; //gets the number of states needed
-		
-			
-	
-		Table newTable = new Table(newStateSpace, this.getTable().getInputs());
-		
-		for(int i=0;i<this.getTable().getStates();i++){
-			for(int j=0;j<this.getTable().getInputs().size();j++){
-				if (!this.getTable().getnStates(i, this.getTable().getInputs().get(j)).isEmpty()){
-					newTable.addnStates(i, this.getTable().getInputs().get(j), this.getTable().getnStates(i, this.getTable().getInputs().get(j)));//add table this
-				}
-			}
-			
-		}
-		
-		ArrayList<Integer> newAcceptStates = new ArrayList<Integer>(); //adds the new state to accept states
-		newAcceptStates.addAll(this.getAcceptStates());
-		newAcceptStates.add(newTable.getStates()-1);
-		
-		newTable.addnStates(newTable.getStates()-1, (char)238, this.getStartState()); //new start state points to old start state
-		
-		
-		NFA unioned = new NFA(id, newTable, newTable.getStates()-1, newAcceptStates);
-		return unioned;
-		
-	}
-	//TODO plus()
-	//TODO concat(other)
-	//TODO toDFA()
-	
-	private ArrayList<Integer> addToAllInList(int adder, ArrayList<Integer> addon){
-			ArrayList<Integer> summed= new ArrayList<Integer>();
-			for(int i=0;i<addon.size();i++){
-				summed.add(addon.get(i)+adder);
-			}
-		return summed;
-	}
-
-	public int getStartState() {
-		return startState;
-	}
-
-	public void setStartState(int startState) {
-		this.startState = startState;
-	}
-
-	public int getCurrentState() {
-		return currentState;
-	}
-
-	public void setCurrentState(int currentState) {
-		this.currentState = currentState;
-	}
-
-	public ArrayList<Integer> getAcceptStates() {
-		return acceptStates;
-	}
-
-	public void setAcceptStates(ArrayList<Integer> acceptStates) {
-		this.acceptStates = acceptStates;
-	}
-
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
-	
-	
-	public Table getTable() {
-		return table;
-	}
-
-	public void setTable(Table table) {
-		this.table = table;
-	}
-
-	@Override
-	public boolean equals(Object other){
-		if( other instanceof NFA)
-			return this.getId().equals(((NFA) other).getId());
-		return false;
-	}
-	
-	public String toString(){
-		return id +" \n "+ table.toString();
-		
-	}
-	
-
-}
-*/

@@ -74,6 +74,36 @@ public class testing {
 		nfa.addEdge(8, 9, 'b');
 		nfa.addEdge(9, 10,'b');
 		
+		nfa.getNfa().addAcceptStates(10, nfa.getId());
+		
+		NFA nfa2 = new NFA("ballSoHard", 0);
+		
+		for (int i = 0; i < 10; i++) {
+			nfa.getNfa().addVertex();
+		}
+		
+		nfa2.addEdge(0, 7, NFA.EPSILON);
+		nfa2.addEdge(2, 3, 'a');
+		nfa2.addEdge(4, 5, 'b');
+		nfa2.addEdge(7, 8, 'a');
+		nfa2.addEdge(8, 9, 'b');
+		nfa2.addEdge(9, 10,'b');
+		
+		nfa2.getNfa().addAcceptStates(10, nfa2.getId());
+		
+		NFA cray = NFA.union("Cray", nfa, nfa2);
+		
+		StringBuffer sb = new StringBuffer();
+		
+		sb.append("abcdcdcd");
+		sb.insert(sb.lastIndexOf("c"),"123");
+		
+		System.out.println(sb);
+		print(cray.toString());
+		print(cray.getNfa().getAcceptStateIds().toString());
+		//print(nfa2.getNfa().getAcceptStateIds().get(0));
+		print(nfa.getNfa().getAcceptStateIds().get(0));
+		
 		//print(nfa.getNfa().epClosure(t).toString());
 		/*
 		g = nfa.getNfa().epsilonClosure(0);
@@ -87,7 +117,7 @@ public class testing {
 		String s = "asdf asdf  adsf";
 		String[] ss1 = s.split(" ");
 		for (String s2 : ss1){
-			print(s2);
+		//	print(s2);
 		}
 		//print(NFA.toDFA(nfa).toString());
 		

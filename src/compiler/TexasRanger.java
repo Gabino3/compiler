@@ -19,6 +19,7 @@ public class TexasRanger {
 					output.append(input.charAt(i));
 				}else {
 					if (dfa.isAccept()){
+						output.insert(output.lastIndexOf("\n")+1, dfa.whichRegex() + " ");
 						output.append('\n');
 						dfa.setCurrentState(dfa.getStartState());
 						i--;
@@ -27,6 +28,7 @@ public class TexasRanger {
 				}
 			}
 			if (dfa.isAccept()){
+				output.insert(output.lastIndexOf("\n")+1, dfa.whichRegex() + " ");
 				output.append('\n');
 				dfa.setCurrentState(dfa.getStartState());
 			}

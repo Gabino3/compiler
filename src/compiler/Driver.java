@@ -10,13 +10,18 @@ public class Driver {
 	
 	public static void main(String[] args) throws Exception {
 		
+		final String INPUT_FILE = "input\\SampleInput";
+		final String OUTPUT_FILE = "input\\Output";
+		final String SPEC_FILE = "input\\SampleSpec";
+		final String GRAMMER_NAME = "EL GIGANTE";
+		
 		String s;
 		NFA giant = null;
 		ArrayList<ParseTree<String>> trees = new ArrayList<ParseTree<String>>();
 		ArrayList<String> NFANames = new ArrayList<String>();
 		ArrayList<NFA> nfas = new ArrayList<NFA>();
 		int endPrimitives = 0;
-		FileReader fr = new FileReader("input\\SampleSpec");
+		FileReader fr = new FileReader(SPEC_FILE);
 		BufferedReader br = new BufferedReader(fr);
 		
 		//call recursive descent parser on each line
@@ -43,17 +48,20 @@ public class Driver {
 		
 		for (int j = endPrimitives; j < nfas.size(); j++) {
 			//System.out.println(nfa);
-			giant = NFA.union("El Gigante", giant, nfas.get(j));
+			giant = NFA.union(GRAMMER_NAME, giant, nfas.get(j));
 		}
 			
-		
+
 		
 		DFA gigante = NFA.toDFA(giant);
 		
 		System.out.println(gigante);
-		FileWriter fw = new FileWriter("input\\Output");
-		fr = new FileReader("input\\SampleInput");
+		
+		FileWriter fw = new FileWriter(OUTPUT_FILE);
+		fr = new FileReader(INPUT_FILE);
 		br = new BufferedReader(fr);
+		
+		
 		
 		while ((s = br.readLine()) != null) {
 

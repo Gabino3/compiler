@@ -46,7 +46,7 @@ public class Digraph implements java.io.Serializable{
 	  private int E;
 	  private ArrayList<ArrayList<Edge>> stateSpace; //vert, edge
 	  private ArrayList<Integer> acceptStates;
-	  
+	  private ArrayList<String> acceptStateIds; //index corresponds to acceptState index
 
 
 
@@ -57,6 +57,7 @@ public class Digraph implements java.io.Serializable{
 		for(int i=0;i<v;i++)
 			this.stateSpace.add(new ArrayList<Edge>());
 		acceptStates = new ArrayList<Integer>();
+		acceptStateIds = new ArrayList<String>();
 	}
 
 
@@ -65,9 +66,20 @@ public class Digraph implements java.io.Serializable{
 	}
 
 
-	public void addAcceptStates(int acceptState) {
+	public ArrayList<String> getAcceptStateIds() {
+		return acceptStateIds;
+	}
+	
+	public void addAcceptStates(int acceptState, String id) {
 		this.acceptStates.add(acceptState);
+		this.acceptStateIds.add(id);
 		
+	}
+	
+	public void setAcceptStateIds(String id){
+		for(int i=0; i<acceptStateIds.size();i++){
+			this.acceptStateIds.set(i, id);
+		}
 	}
 
 	public void addVertex(){

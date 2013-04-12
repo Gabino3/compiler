@@ -619,13 +619,13 @@ public class RDP {
 	
 public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Exception{
 		
-		NFA temp= treeParserHelper(t.getRoot(), nfas);
+		NFA temp= treeParserHelper(t.getRoot(), nfas, t.getRoot().getData());
 		temp.setId(t.getRoot().getData());
 		return temp;
 	}
 	
 	
-	private static NFA treeParserHelper(Node<String> n, ArrayList<NFA> nfas) throws Exception{
+	private static NFA treeParserHelper(Node<String> n, ArrayList<NFA> nfas, String id) throws Exception{
 		
 		NFA nfa0 = null;
 		NFA nfa1 = null;
@@ -636,16 +636,16 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 				
 				if (n.getChildren().get(0).hasChildren()){ // if child has children
 				
-					nfa0 = treeParserHelper(n.getChildren().get(0), nfas);
+					nfa0 = treeParserHelper(n.getChildren().get(0), nfas, id);
 					
 					switch (n.getType()){
 					
 					case ROOT : case CARROT : case RPAREN:
 						return nfa0;
 					case PLUS :
-						return NFA.plus("temp", nfa0);
+						return NFA.plus(id, nfa0);
 					case STAR :
-						return NFA.star("temp", nfa0);
+						return NFA.star(id, nfa0);
 					
 					}
 			
@@ -662,16 +662,16 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 						break;
 					case PLUS :
 						if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR)){
-							return NFA.plus("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)));
+							return NFA.plus(id, quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)));
 						}else if (n.getChildren().get(0).isType(Terminal.DEFINED_CLASS)){
-							return NFA.plus( "temp",(nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0)))));
+							return NFA.plus( id,(nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0)))));
 						}
 						break;
 					case STAR :
 						if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR)){
-							return NFA.star("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)));
+							return NFA.star(id, quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)));
 						}else if (n.getChildren().get(0).isType(Terminal.DEFINED_CLASS)){
-							return NFA.star( "temp",(nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0)))));
+							return NFA.star( id,(nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0)))));
 						}
 						break;
 						
@@ -690,38 +690,38 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 						case UNION :
 							if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR)){
 								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
-									return NFA.union("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
-											quickNFA("temp", n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)) );
+									return NFA.union(id, quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+											quickNFA(id, n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)) );
 								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
-									return NFA.union("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+									return NFA.union(id, quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
 											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
 							}else if (n.getChildren().get(0).isType(Terminal.DEFINED_CLASS)){
 								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
-									return NFA.union("temp", nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+									return NFA.union(id, nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
 											quickNFA(n.getData(), n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)));
 								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
-									return NFA.union("temp", nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+									return NFA.union(id, nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
 											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
 							}
 							break;
 						case DASH :
-							return quickNFA("temp", n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1), 
+							return quickNFA(id, n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1), 
 									n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1));
 							
 						case CONCAT :
 							if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR)){
 								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
-									return NFA.concat("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
-											quickNFA("temp", n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)) );
+									return NFA.concat(id, quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+											quickNFA(id, n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)) );
 								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
-									return NFA.concat("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+									return NFA.concat(id, quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
 											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
 							}else if (n.getChildren().get(0).isType(Terminal.DEFINED_CLASS)){
 								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
-									return NFA.concat("temp", nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+									return NFA.concat(id, nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
 											quickNFA(n.getData(), n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)));
 								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
-									return NFA.concat("temp", nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+									return NFA.concat(id, nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
 											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
 							}
 							break;
@@ -729,7 +729,7 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 							@SuppressWarnings("unchecked")
 							ArrayList<Character> temp = (ArrayList<Character>) (nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0)))).getAlphabet().clone();
 							temp.remove(n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1));
-							return quickNFA("temp", temp);
+							return quickNFA(id, temp);
 							
 					}
 					
@@ -738,18 +738,18 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 				}else { //---------------------------------------a child has a child (still in 2 children area)
 					if(n.getChildren().get(0).hasChildren()){ //first has child
 						
-						nfa0 = treeParserHelper(n.getChildren().get(0), nfas);
+						nfa0 = treeParserHelper(n.getChildren().get(0), nfas, id);
 						
 						if(n.getChildren().get(1).hasChildren()){ //both have children
 							
-							nfa1 = treeParserHelper(n.getChildren().get(1), nfas);
+							nfa1 = treeParserHelper(n.getChildren().get(1), nfas, id);
 							switch (n.getType()){
 							
 								case UNION :
-									return NFA.union("temp", nfa0, nfa1);
+									return NFA.union(id, nfa0, nfa1);
 									
 								case CONCAT :
-									return NFA.concat("temp", nfa0, nfa1);
+									return NFA.concat(id, nfa0, nfa1);
 								
 							}
 							
@@ -758,18 +758,18 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 							
 							case UNION :
 								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
-									return NFA.union("temp", nfa0, 
+									return NFA.union(id, nfa0, 
 											quickNFA(n.getData(), n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)));
 								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
-									return NFA.union("temp", nfa0, 
+									return NFA.union(id, nfa0, 
 											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
 								
 							case CONCAT :
 								if (n.getChildren().get(1).isType(Terminal.CLS_CHAR) || n.getChildren().get(1).isType(Terminal.RE_CHAR))
-									return NFA.concat("temp", nfa0, 
+									return NFA.concat(id, nfa0, 
 											quickNFA(n.getData(), n.getChildren().get(1).getData().charAt(n.getChildren().get(1).getData().length()-1)));
 								else if(n.getChildren().get(1).isType(Terminal.DEFINED_CLASS))
-									return NFA.concat("temp", nfa0, 
+									return NFA.concat(id, nfa0, 
 											nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0))));
 							
 							case IN :
@@ -777,7 +777,7 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 								ArrayList<Character> temp = (ArrayList<Character>) (nfas.get(nfas.indexOf(new NFA(n.getChildren().get(1).getData(),0)))).getAlphabet().clone();
 								temp.removeAll(nfa0.getAlphabet());
 								//temp.add(NFA.EPSILON);
-								return quickNFA("temp", temp);
+								return quickNFA(id, temp);
 							
 							}
 							
@@ -786,24 +786,24 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 						
 					} else if(n.getChildren().get(1).hasChildren()){
 						
-						nfa1 = treeParserHelper(n.getChildren().get(1), nfas);
+						nfa1 = treeParserHelper(n.getChildren().get(1), nfas, id);
 						
 						switch (n.getType()){
 						
 						case UNION :
 							if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR))
-								return NFA.union("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+								return NFA.union(id, quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
 										nfa1 );
 							else if(n.getChildren().get(0).isType(Terminal.DEFINED_CLASS))
-								return NFA.union("temp",  nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+								return NFA.union(id,  nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
 										nfa1);
 							
 						case CONCAT :
 							if (n.getChildren().get(0).isType(Terminal.CLS_CHAR) || n.getChildren().get(0).isType(Terminal.RE_CHAR))
-								return NFA.concat("temp", quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
+								return NFA.concat(id, quickNFA(n.getData(), n.getChildren().get(0).getData().charAt(n.getChildren().get(0).getData().length()-1)), 
 										nfa1 );
 							else if(n.getChildren().get(0).isType(Terminal.DEFINED_CLASS))
-								return NFA.concat("temp",  nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
+								return NFA.concat(id,  nfas.get(nfas.indexOf(new NFA(n.getChildren().get(0).getData(),0))), 
 										nfa1);
 						
 						}
@@ -831,7 +831,7 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 		NFA temp;
 			temp = new NFA(id, 0);
 			temp.getNfa().addVertex();
-			temp.getNfa().addAcceptStates(1);
+			temp.getNfa().addAcceptStates(1, id);
 			temp.addEdge(0, 1, action);
 			return temp;
 		
@@ -842,7 +842,7 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 		NFA temp;
 			temp = new NFA(id, 0);
 			temp.getNfa().addVertex();
-			temp.getNfa().addAcceptStates(1);
+			temp.getNfa().addAcceptStates(1, id);
 			for(int i=(int)start; i<=end;i++)
 				temp.addEdge(0, 1, (char)i);
 			return temp;
@@ -854,7 +854,7 @@ public static NFA treeParser(ParseTree<String> t, ArrayList<NFA> nfas) throws Ex
 		NFA temp;
 			temp = new NFA(id, 0);
 			temp.getNfa().addVertex();
-			temp.getNfa().addAcceptStates(1);
+			temp.getNfa().addAcceptStates(1, id);
 			for(char action : actions)
 				temp.addEdge(0, 1, action);
 			return temp;

@@ -66,6 +66,17 @@ public class DFA {
 		return false;
 	}
 	
+	public String whichRegex(){
+		
+		for (int state : dfa.getAcceptStates()) {
+			if (currentState.contains(state)){
+				return dfa.getAcceptStateIds().get(dfa.getAcceptStates().indexOf(state)).substring(1);
+			}
+		}
+		
+		return "";
+	}
+	
 	public boolean isAccept(){
 		return acceptStates.contains(currentState);
 	}
@@ -241,9 +252,18 @@ public class DFA {
 	}
 	
 	public String toString(){
-		return id +"\nStates " +Integer.toString(getStates().size()) + "\nEdges " + Integer.toString(E) + 
-				"\nAlpha Size " + Integer.toString(this.alphabet.size()) +"\n" + Integer.toString(this.alphabet.size()*getStates().size()) +
-						" \n acceptStates" + acceptStates.size();
+		String s = getId() + "\nAlphabet: "+ getAlphabet().toString() + "\nStart: "+getStartState().toString()+" \nStates:\n" ;
+		for(ArrayList<Integer> state : getStates())
+			s += state.toString() + "\n";
+		s+=" \nEdges:\n";
+		for(ArrayList<Edge> edges : getEdges())
+			s += edges.toString() + "\n";
+		return s;
+		
+		
+	//	return id +"\nStates " +Integer.toString(getStates().size()) + "\nEdges " + Integer.toString(E) + 
+	//			"\nAlpha Size " + Integer.toString(this.alphabet.size()) +"\n" + Integer.toString(this.alphabet.size()*getStates().size()) +
+	//					" \n acceptStates" + acceptStates.size();
 	}
 	
 	

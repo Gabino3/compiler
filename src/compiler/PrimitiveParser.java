@@ -74,7 +74,7 @@ public class PrimitiveParser {
 		accept.remove((Character)(char)238);
 		NFA newnfa = new NFA(id, 0);
 		newnfa.getNfa().addVertex();
-		newnfa.getNfa().addAcceptStates(1);
+		newnfa.getNfa().addAcceptStates(1, id);
 		for (char c : accept){
 			newnfa.addEdge(0, 1, c);
 		}
