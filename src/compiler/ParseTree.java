@@ -37,6 +37,10 @@ public class ParseTree<T> {
 			this.data = data;
 		}
         
+		public void setType(RDP.Terminal type){
+			this.type = type;
+		}
+		
     	public void addChild(Node<T> child){
     		this.children.add(child);
     	}

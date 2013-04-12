@@ -25,7 +25,7 @@ public class RDP {
 	int linePointer;
 
 	public enum Terminal {
-		CLS_CHAR, RE_CHAR, DEFINED_CLASS, UNION, STAR, PLUS, DASH, DOT, LPAREN, RPAREN, LBRACKET, RBRACKET, CARROT, IN
+		CLS_CHAR, RE_CHAR, DEFINED_CLASS, UNION, STAR, PLUS, DASH, DOT, LPAREN, RPAREN, LBRACKET, RBRACKET, CARROT, IN, CONCAT
 	};
 
 	// ----------------------------------constructor
@@ -180,8 +180,9 @@ public class RDP {
 					print("\\CLS_CHAR"); //debugging
 					//tree management-----------------------------------
 					if(tree.rootIsCurrent() || tree.getCurrent().isType(Terminal.CARROT)){//if this CLS is the first thing or is right after a negation carrot
-						tree.getCurrent().addChild(new Node<String>(line.substring(linePointer-2, linePointer), Terminal.CLS_CHAR, tree.getCurrent()));
-						tree.setCurrent(tree.getCurrent().getChildren().get(0));
+						Node<String> temp = new Node<String>(line.substring(linePointer-2, linePointer), Terminal.CLS_CHAR, tree.getCurrent());
+						tree.getCurrent().addChild(temp);
+						tree.setCurrent(temp);
 					}else if(tree.getCurrent().isType(Terminal.DASH) && tree.getCurrent().getNumOfChildren()<2){//if there is a range (CLS - CLS)
 						tree.getCurrent().addChild(new Node<String>(line.substring(linePointer-2, linePointer), Terminal.CLS_CHAR, tree.getCurrent()));
 					}else if(tree.getCurrent().isType(Terminal.CLS_CHAR) || (tree.getCurrent().isType(Terminal.DASH) && tree.getCurrent().getNumOfChildren()>=2)){ //if there needs to be a union (CLS CLS --OR-- CLS-CLS CLS )
@@ -224,8 +225,24 @@ public class RDP {
 						line.charAt(linePointer+1) == '[' || line.charAt(linePointer+1) == ']' || line.charAt(linePointer+1) == '?' || 
 						line.charAt(linePointer+1) == '|' || line.charAt(linePointer+1) == '(' || line.charAt(linePointer+1) == ')' || 
 						line.charAt(linePointer+1) == '.' || line.charAt(linePointer+1) == '\'' || line.charAt(linePointer+1) == '\"' || line.charAt(linePointer+1) == ' '){
-					linePointer+=2;
-					print("\\RE_CHAR");
+					linePointer+=2;//string management
+					print("\\RE_CHAR");//debugging
+					//tree management-----------------------------------
+					if(tree.rootIsCurrent() ){
+						Node<String> temp = new Node<String>(line.substring(linePointer-2, linePointer), Terminal.RE_CHAR, tree.getCurrent());
+						tree.getCurrent().addChild(temp);
+						tree.setCurrent(temp);
+						
+					}else if(tree.getCurrent().isType(Terminal.RE_CHAR) || tree.getCurrent().isType(Terminal.DEFINED_CLASS) || tree.getCurrent().isType(Terminal.RPAREN) || tree.getCurrent().isType(Terminal.CONCAT) || tree.getCurrent().isType(Terminal.PLUS) || tree.getCurrent().isType(Terminal.STAR)){ //if there needs to be a union (CLS CLS --OR-- CLS-CLS CLS )
+						
+						tree.getCurrent().newParent(new Node<String>(null, Terminal.CONCAT, tree.getCurrent().getParent()));
+						tree.setCurrent(tree.getCurrent().getParent());
+						Node<String> temp = new Node<String>(line.substring(linePointer-2, linePointer), Terminal.RE_CHAR, tree.getCurrent());
+						tree.getCurrent().addChild(temp);
+						tree.setCurrent(temp);
+					}
+					
+					//---------
 					return true;
 				}
 			}else if ((int)line.charAt(linePointer) >=32 && (int)line.charAt(linePointer) <=126 && 
@@ -234,7 +251,23 @@ public class RDP {
 					line.charAt(linePointer) != '|' && line.charAt(linePointer) != '(' && line.charAt(linePointer) != ')' && 
 					line.charAt(linePointer) != '.' && line.charAt(linePointer) != '\'' && line.charAt(linePointer) != '\"' && line.charAt(linePointer) != ' '){ //any ascii char other than SPACE, \, *, +, ?, |, [, ], (, ), ., ' and " 
 				linePointer++;
-				print("RE_CHAR");
+				print("RE_CHAR");//debugging
+				//tree management-----------------------------------
+				if(tree.rootIsCurrent() ){
+					Node<String> temp = new Node<String>(line.substring(linePointer-1, linePointer), Terminal.RE_CHAR, tree.getCurrent());
+					tree.getCurrent().addChild(temp);
+					tree.setCurrent(temp);
+					
+				}else if(tree.getCurrent().isType(Terminal.RE_CHAR) || tree.getCurrent().isType(Terminal.DEFINED_CLASS) || tree.getCurrent().isType(Terminal.RPAREN) || tree.getCurrent().isType(Terminal.CONCAT) || tree.getCurrent().isType(Terminal.PLUS) || tree.getCurrent().isType(Terminal.STAR)){ //if there needs to be a union (CLS CLS --OR-- CLS-CLS CLS )
+					
+					tree.getCurrent().newParent(new Node<String>(null, Terminal.CONCAT, tree.getCurrent().getParent()));
+					tree.setCurrent(tree.getCurrent().getParent());
+					Node<String> temp = new Node<String>(line.substring(linePointer-1, linePointer), Terminal.RE_CHAR, tree.getCurrent());
+					tree.getCurrent().addChild(temp);
+					tree.setCurrent(temp);
+				}
+				
+				//---------
 				return true;
 			}
 			break;
@@ -246,9 +279,29 @@ public class RDP {
 					i++;
 				}
 				if( definedClasses.contains(line.substring(linePointer, linePointer+i)) ){
-					print("Defined_Class");
-					linePointer+=i;
+					print("Defined_Class");//debugging
+					linePointer+=i;//string management
+					//-----------tree management
+					//RE_CHAR, DEFINED_CLASS, UNION, STAR, PLUS, DASH, DOT, LPAREN, RPAREN, LBRACKET, RBRACKET, CARROT, IN, CONCAT
 					
+					if(tree.getCurrent().isType(Terminal.IN) || tree.rootIsCurrent() || tree.getCurrent().isType(Terminal.LPAREN)){
+						Node<String> temp = new Node<String>(line.substring(linePointer-i, linePointer), Terminal.DEFINED_CLASS, tree.getCurrent());
+						tree.getCurrent().addChild(temp);
+						tree.setCurrent(temp);
+					}else if(tree.getCurrent().isType(Terminal.RE_CHAR) || tree.getCurrent().isType(Terminal.DEFINED_CLASS) || tree.getCurrent().isType(Terminal.RPAREN) || tree.getCurrent().isType(Terminal.CONCAT) || tree.getCurrent().isType(Terminal.PLUS) || tree.getCurrent().isType(Terminal.STAR)){ 
+						
+						tree.getCurrent().newParent(new Node<String>(null, Terminal.CONCAT, tree.getCurrent().getParent()));
+						tree.setCurrent(tree.getCurrent().getParent());
+						Node<String> temp = new Node<String>(line.substring(linePointer-i, linePointer), Terminal.DEFINED_CLASS, tree.getCurrent());
+						tree.getCurrent().addChild(temp);
+						tree.setCurrent(temp);
+					}else if(tree.getCurrent().isType(Terminal.UNION)){
+						Node<String> temp = new Node<String>(line.substring(linePointer-i, linePointer), Terminal.DEFINED_CLASS, tree.getCurrent());
+						tree.getCurrent().addChild(temp);
+						tree.setCurrent(temp);
+					}
+					
+					//---------------
 					return true;
 				}
 			}
@@ -257,21 +310,45 @@ public class RDP {
 		case UNION:
 			if(line.charAt(linePointer) == '|'){
 				linePointer++;
-				print('|');
+				print('|');//string management
+				//-----------tree management
+				
+				if(tree.getCurrent().isType(Terminal.RE_CHAR) || tree.getCurrent().isType(Terminal.DEFINED_CLASS) || tree.getCurrent().isType(Terminal.RPAREN) ){ 
+					tree.getCurrent().newParent(new Node<String>(null, Terminal.UNION, tree.getCurrent().getParent()));
+					tree.setCurrent(tree.getCurrent().getParent());
+				}
+				
+				//--------------------------
 				return true;
 			}
 			break;
 		case STAR:
 			if(line.charAt(linePointer) == '*'){
 				linePointer++;
-				print('*');
+				print('*');//string management
+				//-----------tree management
+				
+				if(tree.getCurrent().isType(Terminal.RE_CHAR) || tree.getCurrent().isType(Terminal.DEFINED_CLASS) || tree.getCurrent().isType(Terminal.RPAREN) ){ 
+					tree.getCurrent().newParent(new Node<String>(null, Terminal.STAR, tree.getCurrent().getParent()));
+					tree.setCurrent(tree.getCurrent().getParent());
+				}
+				
+				//--------------------------
 				return true;
 			}
 			break;
 		case PLUS:
 			if(line.charAt(linePointer) == '+'){
 				linePointer++;
-				print('+');
+				print('+');//string management
+				//-----------tree management
+				
+				if(tree.getCurrent().isType(Terminal.RE_CHAR) || tree.getCurrent().isType(Terminal.DEFINED_CLASS) || tree.getCurrent().isType(Terminal.RPAREN) ){ 
+					tree.getCurrent().newParent(new Node<String>(null, Terminal.PLUS, tree.getCurrent().getParent()));
+					tree.setCurrent(tree.getCurrent().getParent());
+				}
+				
+				//--------------------------
 				return true;
 			}
 			break;
@@ -300,14 +377,37 @@ public class RDP {
 		case LPAREN:
 			if(line.charAt(linePointer) == '('){
 				linePointer++;
-				print('(');
+				print('(');//string management
+				//-----------tree management
+				
+				if(tree.getCurrent().isType(Terminal.RPAREN) || tree.rootIsCurrent()){ 
+					
+					Node<String> temp = new Node<String>(null, Terminal.LPAREN, tree.getCurrent());
+					tree.getCurrent().addChild(temp);
+					tree.setCurrent(temp);
+				}else if(tree.getCurrent().isType(Terminal.RE_CHAR) || tree.getCurrent().isType(Terminal.DEFINED_CLASS) ){
+					tree.getCurrent().newParent(new Node<String>(null, Terminal.CONCAT, tree.getCurrent().getParent()));
+					tree.setCurrent(tree.getCurrent().getParent());
+					Node<String> temp = new Node<String>(null, Terminal.LPAREN, tree.getCurrent());
+					tree.getCurrent().addChild(temp);
+					tree.setCurrent(temp);
+				}
+				
+				//--------------------------
 				return true;
 			}
 			break;
 		case RPAREN:
 			if(line.charAt(linePointer) == ')'){
 				linePointer++;
-				print(')');
+				print(')');//string management
+				//-----------tree management
+				
+				while (!tree.getCurrent().isType(Terminal.LPAREN)){ //go to the carrot level
+					tree.setCurrent(tree.getCurrent().getParent());
+				}
+				tree.getCurrent().setType(Terminal.RPAREN);
+				//--------------------------
 				return true;
 			}
 			break;

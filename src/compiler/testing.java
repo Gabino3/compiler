@@ -51,8 +51,11 @@ public class testing {
 		bh.get(0).addAll(g);
 		
 		*/
-		ArrayList<ArrayList<Integer>> t = new ArrayList<ArrayList<Integer>>(10);
+		ArrayList<Integer> t = new ArrayList<Integer>();
+		t.add(3);
 		
+		int aas = 3;
+		print(Boolean.toString(t.contains(aas)));
 		Table table = new Table(6, notaccept);
 		
 		Digraph d = new Digraph(3);
