@@ -2,6 +2,7 @@ package compiler;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 
 import compiler.ParseTree.Node;
@@ -43,7 +44,20 @@ public class Driver {
 			giant = NFA.union("El Gigante", giant, nfa);
 		}
 		
-		System.out.println(giant);
+		DFA gigante = NFA.toDFA(giant);
+		
+		System.out.println(gigante);
+		FileWriter fw = new FileWriter("input\\Output");
+		fr = new FileReader("input\\SampleInput");
+		br = new BufferedReader(fr);
+		
+		while ((s = br.readLine()) != null) {
+
+			if(!s.equals("")){
+				fw.write(TexasRanger.Walker(s, gigante));
+			}
+			
+		}
 
 		/*
 		 * 

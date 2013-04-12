@@ -96,23 +96,59 @@ public class Digraph implements java.io.Serializable{
 		return temp;
 	}
 	
-	//gets all Vertices that an initalVertex can transition to with given action
-	public ArrayList<Integer> getVertices(int initialVertex, char action){
-		
-		 ArrayList<Integer> vertices = new ArrayList<Integer>();
-		for (Edge edge : getEdge(initialVertex,action) )
-			vertices.add(edge.to);
-		
-		return vertices;
-		
-	}
-	
 	//takes a set of states A and returns the epsilon-Closer of set A
-	public ArrayList<Integer> epsilonClosure(int initialVertex){
-	
-		return getVertices(initialVertex, EPSILON);
+	public ArrayList<Integer> epsilonClosure(int state){
+		ArrayList<Integer> toStates = new ArrayList<Integer>();
+		toStates.add(state);
+		DFA.addUnique(toStates, epsilonClosureHelper(state));
+		return toStates;
 		
 	}
+
+
+	//takes a set of states A and returns the epsilon-Closer of set A
+	public ArrayList<Integer> epsilonClosure(ArrayList<Integer> states){
+		ArrayList<Integer> toStates = new ArrayList<Integer>();
+		DFA.addUnique(toStates,states);
+		for (int from : states){
+			DFA.addUnique(toStates, epsilonClosureHelper(from));
+			
+		}
+		
+		return toStates;
+	}
+	
+	private ArrayList<Integer> epsilonClosureHelper(int from){
+		ArrayList<Integer> toStates = new ArrayList<Integer>();
+		ArrayList<Edge> edges = this.getEdge(from, NFA.EPSILON);
+		for(Edge edge : edges){
+			toStates.add(edge.to);
+			DFA.addUnique(toStates, epsilonClosureHelper(edge.to));
+		}
+		return toStates;
+	}
+	
+	
+	public ArrayList<Integer> moveNfa(ArrayList<Integer> states, char action){
+		ArrayList<Integer> toStates = new ArrayList<Integer>();
+		
+		for (int from : states){
+			ArrayList<Edge> edges = this.getEdge(from, action);
+			for(Edge edge : edges){
+				if ( !(toStates.contains(edge.to)) ){
+					toStates.add(edge.to);
+				}
+			}
+		}
+		
+		return toStates;
+	}
+	
+	public ArrayList<Integer> moveDfa(ArrayList<Integer> states, char action){
+		return epsilonClosure(moveNfa(states, action));
+	}
+	
+	
 	public boolean addEdge(int from, int to, char action){
 		if(from < 0 || from >= V || to < 0 || to >= V){
 			System.out.println("Error: addEdge out of bounds");

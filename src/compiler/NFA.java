@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import compiler.Digraph.Edge;
 @SuppressWarnings("serial")
@@ -155,8 +156,7 @@ public class NFA  implements java.io.Serializable{
 		
 		return new NFA(id, newD.getV()-1, newD, nfa.alphabet);
 	}
-	
-	
+
 	
 	public static NFA plus(String id, NFA nfa){
 		
@@ -254,25 +254,41 @@ public class NFA  implements java.io.Serializable{
 	   }
 		
 	//takes NFA and returns corresponding DFA
-	public DFA toDFA(NFA nfa){
+	public static DFA toDFA(NFA nfa){
 		
-		ArrayList<Integer> dfaStartState = new ArrayList<Integer>();
-		dfaStartState = nfa.nfa.epsilonClosure(getStartState());
+		ArrayList<Integer> dfaStartState = new ArrayList<Integer>(); //getting start state
+		dfaStartState = nfa.nfa.epsilonClosure(nfa.getStartState());
+		Collections.sort(dfaStartState);
 		
 		DFA dfa = new DFA(nfa.id, dfaStartState, nfa.nfa, nfa.alphabet);
+		dfa.getAlphabet().remove((Character)NFA.EPSILON);
 		
 		while (dfa.hasUnmarked()){
-			//Mark state T
+			//get next unmarked
 			int stateIndex = dfa.getMarked().indexOf(0);
+			//mark it
 			dfa.getMarked().set( stateIndex, 1);
 			
-			//for each a in alphabet 
+			//for each a in alphabet do eClosure(move(T,a))
 			for (Character a : dfa.getAlphabet() ){
+				//get MOVEdfa(state, a)
+				ArrayList<Integer> newState =  new ArrayList<Integer>();
+				newState = nfa.nfa.moveDfa(dfa.getStates().get(stateIndex), a);
+				Collections.sort(newState);
+				
+				//if S is not in dfa.states add it and have it as unmarked
+				dfa.addUniqueState(newState);
+				
+				//create edge between T and S ie.move(T,a) to S
+				dfa.addEdge(stateIndex,a,newState);
+				
+				
+				/*
 				ArrayList<Integer> newState =  new ArrayList<Integer>();
 				
 				//S = eClosure(move(T,a))
 				for (Integer vertex : dfa.getStates().get(stateIndex)){
-					dfa.addUnique(newState,(dfa.getDfa().epsilonClosure(vertex)));
+					DFA.addUnique(newState,(dfa.getDfa().epsilonClosure(vertex)));
 				}
 								
 				//if S is not in dfa.states add it and have it as unmarked
@@ -280,15 +296,30 @@ public class NFA  implements java.io.Serializable{
 				
 				//create edge between T and S ie.move(T,a) to S
 				//dfa.addEdge(,a,);
-				
+				*/
 				
 
 			}
+			
 		}
+		
+		for (ArrayList<Integer> state : dfa.getStates()){
+			
+			for (Integer accept : nfa.nfa.getAcceptStates()){
+				if (state.contains(accept)){
+					dfa.addAcceptStates(state);
+				}
+			}
+			
+		}
+		
 		
 		return dfa;
 		
 	}
+	
+	
+	
 }
 
 /*

@@ -52,56 +52,38 @@ public class testing {
 		
 		*/
 		ArrayList<Integer> t = new ArrayList<Integer>();
-		t.add(3);
-		NFA nfa1 = null;
+		t.add(0);
+		NFA nfa = new NFA("v", 0);
 		
-		int aas = 3;
-		print(Boolean.toString(nfa1==null));
-		Table table = new Table(6, notaccept);
+		for (int i = 0; i < 10; i++) {
+			nfa.getNfa().addVertex();
+		}
 		
-		Digraph d = new Digraph(3);
-		d.addEdge(0, 1, NFA.EPSILON);
-		d.addEdge(0, 2, 'h');
-		d.addEdge(1, 2, '1');
+		nfa.addEdge(0, 7, NFA.EPSILON);
+		nfa.addEdge(0, 1, NFA.EPSILON);
+		nfa.addEdge(1, 2, NFA.EPSILON);
+		nfa.addEdge(1, 4, NFA.EPSILON);
+		nfa.addEdge(3, 6, NFA.EPSILON);
+		nfa.addEdge(5, 6, NFA.EPSILON);
+		nfa.addEdge(6, 1, NFA.EPSILON);
+		nfa.addEdge(6, 7, NFA.EPSILON);
 		
-		Digraph b = d.copy();
+		nfa.addEdge(2, 3, 'a');
+		nfa.addEdge(4, 5, 'b');
+		nfa.addEdge(7, 8, 'a');
+		nfa.addEdge(8, 9, 'b');
+		nfa.addEdge(9, 10,'b');
 		
-		b.addEdge(2, 1, 'h');
-		
-		//print(d.toString());
-		//System.out.println(d.toString());
-		Table table2 = new Table(table.getStates(), table.getInputs());
-		table2.addState();
-		table2.addState();
-		table2.addState();
-		table2.addState();
-		table2.addInput('h');
-		
-		
-		//System.out.println(table);
-		//System.out.println(table2);
-		
-		
-		
-		ParseTree<String> tree = new ParseTree<String>("ROOT");
-		print(Boolean.toString(tree.rootIsCurrent()));
-		tree.getCurrent().addChild(new Node<String>("NOTROOT", RDP.Terminal.CARROT, tree.getCurrent()));
-		tree.getCurrent().addChild(new Node<String>("NOTROOT", RDP.Terminal.CLS_CHAR, tree.getCurrent()));	
-		tree.setCurrent(tree.getCurrent().getChildren().get(0));
-		tree.getCurrent().addChild(new Node<String>("NOTROOT", RDP.Terminal.DASH, tree.getCurrent()));
-		tree.getCurrent().addChild(new Node<String>("NOTROOT", RDP.Terminal.DEFINED_CLASS, tree.getCurrent()));
-		print(tree.toString());
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		//print(nfa.getNfa().epClosure(t).toString());
+		/*
+		g = nfa.getNfa().epsilonClosure(0);
+		Collections.sort(g);
+		print(g.toString());
+		g = nfa.getNfa().epsilonClosure(nfa.getNfa().moveNfa(g, 'a'));
+		Collections.sort(g);
+		print(g.toString());
+		*/
+		print(NFA.toDFA(nfa).toString());
 		
 	}
 	

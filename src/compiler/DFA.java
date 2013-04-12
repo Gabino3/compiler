@@ -3,24 +3,69 @@ package compiler;
 import java.util.ArrayList;
 
 public class DFA {
-	static final char EPSILON = (char)238;
 	private String id;
 	private Digraph dfa;
+	int E;
 	private ArrayList<ArrayList<Integer>> states;
 	private ArrayList<Integer>  currentState;
+	private ArrayList<ArrayList<Integer>> acceptStates;
 	private ArrayList<Integer>  startState;
 	private ArrayList<Character> alphabet;
 	private ArrayList<Integer> marked; //0 - unmarked, 1 - marked
-	private ArrayList<ArrayList<Character>> edges;
+	private ArrayList<ArrayList<Edge>> edges;
 	 
-	
+	@SuppressWarnings("serial")
+	static class Edge implements java.io.Serializable{
+	    public final ArrayList<Integer> to;
+	    public final char action;
+	    
+	    
+	    public Edge(ArrayList<Integer> to, char action) {
+	      this.to = to;
+	      this.action = action;
+	    }
+	    @Override
+	    public boolean equals(Object obj) {
+	    	if (obj instanceof Edge){
+	    		Edge e = (Edge)obj;
+	    		return e.to == to && e.action == action;
+	    	}
+	    	else if(obj instanceof Character){
+	    		return (int)action == (int)((Character)obj);
+	    	}
+	    	return false;
+	    }
+	    
+	    public String toString(){
+	    	String s = "";
+	    	
+	    	s = "{\'" + action + "\' : " + to.toString() + "}";
+	    	
+	    	return s;
+	    }
+	    
+	  }//-----------------------------
 
-	public ArrayList<ArrayList<Character>> getEdges() {
+	
+	public void move(char action){
+		for (Edge edge : getEdges().get(states.indexOf(currentState))){
+			if (edge.action == action){
+				currentState = edge.to;
+				break;
+			}
+		}
+	}
+	
+	public boolean isAccept(){
+		return acceptStates.contains(currentState);
+	}
+	
+	public ArrayList<ArrayList<Edge>> getEdges() {
 		return edges;
 	}
 
 
-	public void setEdges(ArrayList<ArrayList<Character>> edges) {
+	public void setEdges(ArrayList<ArrayList<Edge>> edges) {
 		this.edges = edges;
 	}
 
@@ -51,6 +96,23 @@ public class DFA {
 
 	public void setStates(ArrayList<ArrayList<Integer>> states) {
 		this.states = states;
+	}
+
+
+	public ArrayList<ArrayList<Integer>> getAcceptStates() {
+		return acceptStates;
+	}
+
+
+	public void setAcceptStates(ArrayList<ArrayList<Integer>> acceptStates) {
+		this.acceptStates = acceptStates;
+	}
+	
+	public void addAcceptStates(ArrayList<Integer> acceptState) {
+		if (!(getAcceptStates().contains(acceptState))) {
+			getAcceptStates().add(acceptState);
+		}
+		
 	}
 
 
@@ -106,7 +168,10 @@ public class DFA {
 		this.marked = new ArrayList<Integer>();
 		//set state 0 to unmarked
 		marked.add(0);
-		this.edges = new ArrayList<ArrayList<Character>>();
+		this.edges = new ArrayList<ArrayList<Edge>>();
+		this.edges.add(new ArrayList<Edge>());
+		this.acceptStates = new ArrayList<ArrayList<Integer>>();
+		E = 0;
 	}
 
 
@@ -117,14 +182,16 @@ public class DFA {
 		this.currentState = startState;
 		this.dfa = new Digraph(1);
 		this.alphabet = new ArrayList<Character>();
-		this.alphabet.add(NFA.EPSILON);
 		this.states = new ArrayList<ArrayList<Integer>>();
 		//populate states with startState
 		states.add(startState);
 		this.marked = new ArrayList<Integer>();
 		//set state 0 to unmarked
 		marked.add(0);
-		this.edges = new ArrayList<ArrayList<Character>>();
+		this.edges = new ArrayList<ArrayList<Edge>>();
+		this.edges.add(new ArrayList<Edge>());
+		this.acceptStates = new ArrayList<ArrayList<Integer>>();
+		E = 0;
 	}
 
 
@@ -137,8 +204,8 @@ public class DFA {
 	}
 	
 	//add all unique Integer objects from b into a  
-	public void addUnique(ArrayList<Integer> a, ArrayList<Integer> b){
-		for (int index =0; index< b.size() ; index++){
+	public static void addUnique(ArrayList<Integer> a, ArrayList<Integer> b){
+		for (int index =0; index < b.size() ; index++){
 			if ( !(a.contains(b.get(index))) ){
 				a.add(b.get(index));
 			}
@@ -150,17 +217,26 @@ public class DFA {
 		if (!(getStates().contains(newState))) {
 			getStates().add(newState);
 			getMarked().add(0);
+			getEdges().add(new ArrayList<Edge>());
 		}
 	}
 
 	//adds edge to edges. With inialVertex as index of edges, destinationVertex as index of ArrayList<Characters> 
 	//and the character a, ie. (State initialVertex, action a) -> State destinationVertex
-	public void addEdge(Integer initialVertex, Character a, Integer destinationVertex ) {
-		ArrayList<Character> action = new ArrayList<Character>() ;
-		action.add(destinationVertex, a);
-		getEdges().add(initialVertex,action);
+	public void addEdge(int initialVertex, Character a, ArrayList<Integer> destinationVertex ) {
+		
+		getEdges().get(initialVertex).add(new Edge(destinationVertex, a));
+		E++;
 		
 	}
+	
+	public String toString(){
+		return id +"\nStates " +Integer.toString(getStates().size()) + "\nEdges " + Integer.toString(E) + 
+				"\nAlpha Size " + Integer.toString(this.alphabet.size()) +"\n" + Integer.toString(this.alphabet.size()*getStates().size()) +
+						" \n acceptStates" + acceptStates.size();
+	}
+	
+	
 }
 
 
