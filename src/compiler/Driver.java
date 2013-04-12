@@ -5,9 +5,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
 
-import compiler.ParseTree.Node;
-import compiler.RDP.Terminal;
-
 public class Driver {
 	
 	
@@ -18,16 +15,21 @@ public class Driver {
 		ArrayList<ParseTree<String>> trees = new ArrayList<ParseTree<String>>();
 		ArrayList<String> NFANames = new ArrayList<String>();
 		ArrayList<NFA> nfas = new ArrayList<NFA>();
-		
+		int endPrimitives = 0;
 		FileReader fr = new FileReader("input\\SampleSpec");
 		BufferedReader br = new BufferedReader(fr);
 		
 		//call recursive descent parser on each line
+		int i=0;
 		while ((s = br.readLine()) != null) {
 
 			if(!s.equals("")){
 				trees.add(RDP.rdparser(s.trim(), NFANames));
 				NFANames.add(trees.get(trees.size()-1).getRoot().getData());
+				i++;
+			}else {
+				if(endPrimitives == 0)
+					endPrimitives = i;
 			}
 			
 		}
@@ -39,10 +41,12 @@ public class Driver {
 		}
 		
 		
-		for(NFA nfa : nfas){
+		for (int j = endPrimitives; j < nfas.size(); j++) {
 			//System.out.println(nfa);
-			giant = NFA.union("El Gigante", giant, nfa);
+			giant = NFA.union("El Gigante", giant, nfas.get(j));
 		}
+			
+		
 		
 		DFA gigante = NFA.toDFA(giant);
 		
