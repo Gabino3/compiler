@@ -9,10 +9,10 @@ public class Driver {
 	
 	
 	public static void main(String[] args) throws Exception {
-		
-		final String INPUT_FILE = "input\\SampleInput";
-		final String OUTPUT_FILE = "input\\Output";
-		final String SPEC_FILE = "input\\SampleSpec";
+		String location = "";
+		final String INPUT_FILE = "input\\"+location+"script.txt";
+		final String OUTPUT_FILE = "input\\"+location+"token_list.txt";
+		final String SPEC_FILE = "input\\"+location+"token_spec.txt";
 		final String GRAMMER_NAME = "EL GIGANTE";
 		
 		String s;
@@ -52,10 +52,10 @@ public class Driver {
 		}
 			
 
-		
+		//make the dfa
 		DFA gigante = NFA.toDFA(giant);
 		
-		System.out.println(gigante);
+		//System.out.println(gigante);
 		
 		FileWriter fw = new FileWriter(OUTPUT_FILE);
 		fr = new FileReader(INPUT_FILE);
@@ -73,10 +73,7 @@ public class Driver {
 		fr.close();
 		fw.close();
 
-		/*
-		 * 
-		 * parse.charClass(); parse.regex();
-		 */
+		
 	}
 	
 	

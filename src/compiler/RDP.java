@@ -23,7 +23,7 @@ public class RDP {
 	ArrayList<String> definedClasses;
 	String line;
 	int linePointer;
-
+	boolean insideBracket;
 	public enum Terminal {
 		CLS_CHAR, RE_CHAR, DEFINED_CLASS, UNION, STAR, PLUS, DASH, DOT, LPAREN, RPAREN, LBRACKET, RBRACKET, CARROT, IN, CONCAT, ROOT
 	};
@@ -34,6 +34,7 @@ public class RDP {
 		tree = new ParseTree<String>("");
 		this.line = line;
 		linePointer = 0;
+		insideBracket = false;
 		this.definedClasses = definedClasses;
 	}
 
@@ -62,10 +63,12 @@ public class RDP {
 	}
 
 	private void skipWhiteSpace() {
-		char ch = line.charAt(linePointer);
-		while (ch != EOF && ch != '\n' && Character.isWhitespace(ch)) {
-			linePointer++;
-			ch = line.charAt(linePointer);
+		if(!insideBracket){
+			char ch = line.charAt(linePointer);
+			while (ch != EOF && ch != '\n' && Character.isWhitespace(ch)) {
+				linePointer++;
+				ch = line.charAt(linePointer);
+			}
 		}
 	}
 
@@ -145,12 +148,16 @@ public class RDP {
 				return true;
 			break;
 		case LBRACKET:
-			if (line.charAt(linePointer) == '[')
+			if (line.charAt(linePointer) == '['){
+				insideBracket = true;
 				return true;
+			}
 			break;
 		case RBRACKET:
-			if (line.charAt(linePointer) == ']')
+			if (line.charAt(linePointer) == ']'){
+				insideBracket = false;
 				return true;
+			}
 			break;
 		case CARROT:
 			if (line.charAt(linePointer) == '^')
@@ -241,6 +248,10 @@ public class RDP {
 						Node<String> temp = new Node<String>(line.substring(linePointer-2, linePointer), Terminal.RE_CHAR, tree.getCurrent());
 						tree.getCurrent().addChild(temp);
 						tree.setCurrent(temp);
+					}else if(tree.getCurrent().isType(Terminal.UNION)){
+						Node<String> temp = new Node<String>(line.substring(linePointer-2, linePointer), Terminal.RE_CHAR, tree.getCurrent());
+						tree.getCurrent().addChild(temp);
+						tree.setCurrent(temp);
 					}
 					
 					//---------
@@ -263,6 +274,10 @@ public class RDP {
 					
 					tree.getCurrent().newParent(new Node<String>(null, Terminal.CONCAT, tree.getCurrent().getParent()));
 					tree.setCurrent(tree.getCurrent().getParent());
+					Node<String> temp = new Node<String>(line.substring(linePointer-1, linePointer), Terminal.RE_CHAR, tree.getCurrent());
+					tree.getCurrent().addChild(temp);
+					tree.setCurrent(temp);
+				}else if(tree.getCurrent().isType(Terminal.UNION)){
 					Node<String> temp = new Node<String>(line.substring(linePointer-1, linePointer), Terminal.RE_CHAR, tree.getCurrent());
 					tree.getCurrent().addChild(temp);
 					tree.setCurrent(temp);
@@ -381,12 +396,12 @@ public class RDP {
 				print('(');//string management
 				//-----------tree management
 				
-				if(tree.getCurrent().isType(Terminal.RPAREN) || tree.rootIsCurrent()){ 
+				if(tree.rootIsCurrent()){ 
 					
 					Node<String> temp = new Node<String>(null, Terminal.LPAREN, tree.getCurrent());
 					tree.getCurrent().addChild(temp);
 					tree.setCurrent(temp);
-				}else if(tree.getCurrent().isType(Terminal.RE_CHAR) || tree.getCurrent().isType(Terminal.DEFINED_CLASS) ){
+				}else if(tree.getCurrent().isType(Terminal.RE_CHAR) || tree.getCurrent().isType(Terminal.DEFINED_CLASS) || tree.getCurrent().isType(Terminal.RPAREN)){
 					tree.getCurrent().newParent(new Node<String>(null, Terminal.CONCAT, tree.getCurrent().getParent()));
 					tree.setCurrent(tree.getCurrent().getParent());
 					Node<String> temp = new Node<String>(null, Terminal.LPAREN, tree.getCurrent());
@@ -403,6 +418,12 @@ public class RDP {
 				linePointer++;
 				print(')');//string management
 				//-----------tree management
+				
+				if(tree.getCurrent().isType(Terminal.UNION)){
+					Node<String> temp = new Node<String>(Character.toString(NFA.EPSILON), Terminal.RE_CHAR, tree.getCurrent());
+					tree.getCurrent().addChild(temp);
+					tree.setCurrent(temp);
+				}
 				
 				while (!tree.getCurrent().isType(Terminal.LPAREN)){ //go to the carrot level
 					tree.setCurrent(tree.getCurrent().getParent());
@@ -423,6 +444,7 @@ public class RDP {
 			if(line.charAt(linePointer) == ']'){
 				linePointer++;
 				print(']');
+				insideBracket = false;
 				return true;
 			}
 			break;
